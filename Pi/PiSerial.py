@@ -20,18 +20,23 @@ class SerialPort:
         self.reset()
 
     def openPort(self):
+        # Check to make sure the port isn't already created or open
         if self._serialPort is not None and self._serialPort.isOpen():
             raise SerialPortException("Serial Port is already openned.")
 
+        # Create and open the serial port
         self._serialPort = serial.Serial(self._portNumber, self._baudRate)
 
     def beginReceiving(self):
+        # Check if the serial port is open
         if self._serialPort is None:
             raise SerialPortException("Serial Port hasn't been initialised.")
 
+        # Check if a comm thread already exists
         if self._communicationThread is not None:
             raise ThreadException("A communication thread is already running.")
-            
+
+        # Create the thread and start it reading the port    
         self._communicationThread = Thread(target=self.read)
         self._communicationThread.daemon = True
         self._communicationThread.start()
@@ -42,7 +47,7 @@ class SerialPort:
             # discard the oldest item
             if self._receiveQueue.full():
                 self._receiveQueue.get()
-                
+    
             self._receiveQueue.put(self._serialPort.readline());
             
     def readBuffer(self):
@@ -64,17 +69,20 @@ class SerialPort:
         self._killThread = False
         
     def closePort(self):
+        # Make sure the port isn't already closed
         if self._serialPort is None or not self._serialPort.isOpen():
             raise SerialPortException("Serial Port is either already closed or not initialised.")
-        
+
+        # Set the termination flag and wait for the thread to terminate execution
         while self._communicationThread and self._communicationThread.isAlive():
             self._killThread = True
-      
+
         self._serialPort.close()
 
         self.reset()
 
 
+# Basic test stuff for if this script is called
 if __name__ == "__main__":
     test = SerialPort(8,9600)
     test.openPort()
