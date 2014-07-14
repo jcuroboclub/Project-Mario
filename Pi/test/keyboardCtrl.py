@@ -1,15 +1,4 @@
-import lightblue, Tkinter as tk, pygame
-
-class fakeBT(object):
-	"""fakeBT - A fake lightblue socket connection"""
-	def __init__(self):
-		super(fakeBT, self).__init__()
-
-	def send(self, string):
-		print(str(string))
-
-	def close(self):
-		print('ended fakeBT')
+import serial, Tkinter as tk, pygame
 
 # http://robotics.stackexchange.com/questions/2011/how-to-calculate-the-right-and-left-speed-for-a-tank-like-rover
 def control_steering(thrust, theta):
