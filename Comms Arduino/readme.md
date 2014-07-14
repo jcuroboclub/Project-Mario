@@ -5,4 +5,4 @@ The Code for the Arduino module responsible for the remote connection with the Z
 
 *Note: It is yet to be determined whether Bluetooth or 433MHz RF are to be used.*
 
-Team: Lachlan Hillam
+Team: Lachlan Hillam, Brendan Calvert
