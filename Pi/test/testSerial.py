@@ -1,4 +1,5 @@
 #! /usr/bin/python
+# http://blog.dawnrobotics.co.uk/2013/11/talking-to-a-bluetooth-serial-module-with-a-raspberry-pi/
  
 import serial
  
