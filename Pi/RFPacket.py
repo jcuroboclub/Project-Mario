@@ -16,10 +16,12 @@ class RFPacket:
         # are passed in as bytes
         self._command = command
 
-        self._data = []
+        intrimData = list()
         
         for datum in arg:
-            self._data.append(datum)
+            intrimData.append(datum)
+
+        self.setData(intrimData)
 
     def getCommand(self):
         return self._command
@@ -32,15 +34,22 @@ class RFPacket:
 
     def setData(self, *arg):
         self._data = []
-        
+
+        # Loop through the data and append it to the data array
         for datum in arg:
-            self._data.append(datum)
+            # Check to see if input was a data array
+            if type(datum) is list:
+                for listDatum in datum:
+                    self._data.append(listDatum)
+            else:
+                self._data.append(datum)
+            
 
     def getByteOutput(self):
         output = self._command
 
         for datum in self._data:
-            output += ',' + datum
+            output += b',' + datum
 
         return output
 
@@ -52,4 +61,12 @@ if __name__ == "__main__":
     data2 = b'data2'
     data3 = b'data3'
     dataArray = [b'data1', b'data2', b'data3']
+
+    packet1 = RFPacket(command, data1)
+    packet2 = RFPacket(command, data1, data2, data3)
+    packet3 = RFPacket(command, dataArray)
+
+    packet1.getByteOutput()
+    packet2.getByteOutput()
+    packet3.getByteOutput()
         
