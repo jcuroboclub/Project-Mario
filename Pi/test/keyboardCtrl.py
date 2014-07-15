@@ -65,20 +65,14 @@ class KeyInput(object):
         print('x: ' + str(self.x) + '  y: ' + str(self.y) + '  left: ' + str(left) +
         	'  right: ' + str(right))
         if (self.y != 0) or (self.x != 0):
-	        self.connection.send(str(unichr(left)) + str(unichr(right)) + str(unichr(0)))
+	        self.connection.write(str(unichr(left)) + str(unichr(right)) + str(unichr(0)))
         root.after(20,self.task)
 
 root = tk.Tk()
 
-dev = lightblue.selectservice()
-print(dev[0])
+bluetoothSerial = serial.Serial( "/dev/rfcomm1", baudrate=9600 )
 
-socket = lightblue.socket()
-socket.connect((dev[0], dev[1]))
-socket.send(str(unichr(2)))
-#socket = fakeBT()
-
-usr = KeyInput(socket, 'Up', 'Down', 'Left', 'Right')
+usr = KeyInput(bluetoothSerial, 'Up', 'Down', 'Left', 'Right')
 root.bind_all('<Key>', usr.keyPressed)
 root.bind_all('<KeyRelease>', usr.keyReleased)
 root.after(20, usr.task)
