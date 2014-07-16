@@ -11,7 +11,7 @@ class SerialPort:
     def __init__(self, portNumber, baudRate):
 
         if os.name == "posix":
-            self._portNumber = '/dev/ttyASM' + str(portNumber)
+            self._portNumber = '/dev/ttyACM' + str(portNumber)
         else:
             # Decrement the port number as the windows serial module starts
             # count at 0
@@ -92,7 +92,6 @@ class SerialPort:
 
 # Basic test stuff for if this script is called
 if __name__ == "__main__":
-    
     if os.name == "posix":
         port = 0
     else:
