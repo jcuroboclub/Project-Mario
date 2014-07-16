@@ -10,7 +10,7 @@ def getConnectedUSBLocations():
     return USBList
 
 def setUSBReadable(USBLocation):
-    call(str.format("chmod 666 {0}", USBLocation.decode('utf-8')), shell=True)
+    call(str.format("sudo chmod 666 {0}", USBLocation.decode('utf-8')), shell=True)
 
 def initialiseUSB():
 
