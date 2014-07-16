@@ -1,31 +1,43 @@
 from subprocess import check_output, call
-import PiSerial
+from PiSerial import SerialPort
 
-# Write pi user pwd into this file, to allow sudo calls without pwd prompts
-pwdLocation = "~/test/pwd"
+class CommunicationModule:
+    # Write pi user pwd into this file, to allow sudo calls without pwd prompts
+    # It's dirty but it works
+    pwdLocation = "~/test/pwd"
+    USBDir = "/dev/ttyACM"
+    encoding = "UTF-8"
+    baudRate = 9600
 
-def getConnectedUSBLocations():
+    def getConnectedUSBLocations():
 
-    connectedUSB = check_output('ls /dev/ttyACM*', shell=True).strip()
+        connectedUSB = check_output(str.format('ls {0}*', USBDir), shell=True).strip()
 
-    USBList = connectedUSB.split(b'\n')
+        USBList = connectedUSB.split(b'\n')
 
-    return USBList
+        return USBList
 
-def setUSBPermissions(USBLocation):
-    call(str.format("sudo chmod 666 {0} < {1}", USBLocation.decode('utf-8'), pwdLocation), shell=True)
+    def setUSBPermissions(USBLocation):
+        call(str.format("sudo chmod 666 {0} < {1}", USBLocation.decode(encoding),
+                        pwdLocation), shell=True)
 
-def initialiseUSB():
+    def initialiseUSB():
 
-    USBList = getConnectedUSBLocations()
+        USBList = getConnectedUSBLocations()
 
-    for USB in USBList:
-        setUSBPermissions(USB)
+        self._portDict = dict()
+        
+        for USB in USBList:
+            setUSBPermissions(USB)
 
-def main():
+            portNumber = int(USB.lstrip(bytes(USBDir, encoding)))
+            self._portDict{portNumber} = SerialPort(portNumber, baudRate)
 
-    initialiseUSB()
+    def main():
+
+        initialiseUSB()
 
 
 if __name__ == "__main__":
-    main()
+    module = CommunicationModule()
+    module.main()

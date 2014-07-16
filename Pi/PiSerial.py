@@ -3,6 +3,7 @@ import os
 from PiExceptions import *
 from queue import Queue
 from threading import Thread
+from Packets import ArduinoTestPacket
 
 class SerialPort:
 
@@ -53,7 +54,7 @@ class SerialPort:
             if self._receiveQueue.full():
                 self._receiveQueue.get()
     
-            self._receiveQueue.put(self._serialPort.readline());
+            self._receiveQueue.put(ArduinoTestPacket(self._serialPort.readline()));
             
     def readBuffer(self):
         # Should think of what is the best output format for this

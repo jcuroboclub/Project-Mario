@@ -1,5 +1,5 @@
 import unittest
-from RFPacket import RFPacket
+from Packets import RFPacket
 
 class RFPacketTest(unittest.TestCase):
 
