@@ -34,10 +34,23 @@ class CommunicationModule:
             portNumber = int(USB.lstrip(bytes(CommunicationModule.USB_DIR,
                                               CommunicationModule.ENCODING)))
             self._portDict[portNumber] = SerialPort(portNumber, CommunicationModule.BAUD_RATE)
+            
+    def startReading(self):
+        for port in self._portDict.values():
+            if not port.isPortOpen():
+                port.openPort()
+                port.beginReceiving()
 
+    def stopReading(self):
+        for port in self._portDict.values():
+            if port.isPortOpen():
+                port.closePort()
+    
     def main(self):
 
         self.initialiseUSB()
+
+        self.startReading()
         
         while True:
             for key in self._portDict.keys():
