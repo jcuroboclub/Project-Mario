@@ -1,4 +1,5 @@
-import serial, Tkinter as tk, pygame
+#import serial, pygame.joystick
+import pygame.joystick
 
 # http://robotics.stackexchange.com/questions/2011/how-to-calculate-the-right-and-left-speed-for-a-tank-like-rover
 def control_steering(thrust, theta):
@@ -68,9 +69,43 @@ class KeyInput(object):
 	        self.connection.write(str(unichr(left)) + str(unichr(right)) + str(unichr(0)))
         root.after(20,self.task)
 
-root = tk.Tk()
+class FakeSerial:
+    """Fake Serial"""
+    def write(self, str):
+        print(str)       
 
-bluetoothSerial = serial.Serial( "/dev/rfcomm1", baudrate=9600 )
+# init joystick
+pygame.joystick.init()
+js = pygame.joystick.Joystick(0)
+
+# config joystick
+print("Wiggle steering")
+steeringAxis = -1
+while steeringAxis < 0: # wait for config
+    for i in range(js.get_numaxes()): # check all axes
+        if abs(js.get_axis()) > 0.5: # if value is more than a half
+            steeringAxis = i # configure
+print("Steering axis set as axis {}".format(steeringAxis))
+
+print("Press go")
+accBtn = -1
+while accBtn < 0: # wait for config
+    for i in range(js.get_numbuttons()): # check all axes
+        if abs(js.get_button()) > 0.5: # if value is more than a half
+            accBtn = i # configure
+print("Acceleration button set as button {}".format(accBtn))
+
+print("Press reverse")
+revBtn = -1
+while revBtn < 0: # wait for config
+    for i in range(js.get_numbuttons()): # check all axes
+        if abs(js.get_button()) > 0.5: # if value is more than a half
+            revBtn = i # configure
+print("Reverse button set as button {}".format(revBtn))
+
+#bluetoothSerial = serial.Serial( "/dev/rfcomm1", baudrate=9600 )
+bluetoothSerial = FakeSerial()
+
 
 usr = KeyInput(bluetoothSerial, 'Up', 'Down', 'Left', 'Right')
 root.bind_all('<Key>', usr.keyPressed)
