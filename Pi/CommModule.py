@@ -23,20 +23,28 @@ class CommunicationModule:
 
     def initialiseUSB(self):
 
-        USBList = getConnectedUSBLocations()
+        USBList = self.getConnectedUSBLocations()
 
         self._portDict = dict()
         
         for USB in USBList:
-            setUSBPermissions(USB)
+            self.setUSBPermissions(USB)
 
             portNumber = int(USB.lstrip(bytes(USBDir, encoding)))
             self._portDict[portNumber] = SerialPort(portNumber, baudRate)
 
     def main(self):
 
-        initialiseUSB()
+        self.initialiseUSB()
+        
+        while True:
+            for key in self._portDict.keys():
+                print("Port: " + str(key))
+                
+                for datum in self._portDict[key].readBuffer():
+                    print(datum)
 
+            input("Press key to grab data...\n")
 
 if __name__ == "__main__":
     module = CommunicationModule()
