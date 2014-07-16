@@ -37,18 +37,3 @@ class RFPacket:
             output += b',' + datum
 
         return output
-
-
-if __name__ == "__main__":
-    command = b'command'
-    data1 = b'data1'
-    data2 = b'data2'
-    data3 = b'data3'
-
-    packet1 = RFPacket(command, data1)
-    packet2 = RFPacket(command, data1, data2, data3)
-
-    packet1.getByteOutput()
-    packet2.getByteOutput()
-    packet3.getByteOutput()
-        

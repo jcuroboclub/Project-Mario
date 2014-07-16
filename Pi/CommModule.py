@@ -12,7 +12,7 @@ def getConnectedUSBLocations():
 
     return USBList
 
-def setUSBReadable(USBLocation):
+def setUSBPermissions(USBLocation):
     call(str.format("sudo chmod 666 {0} < {1}", USBLocation.decode('utf-8'), pwdLocation), shell=True)
 
 def initialiseUSB():
@@ -20,7 +20,7 @@ def initialiseUSB():
     USBList = getConnectedUSBLocations()
 
     for USB in USBList:
-        setUSBReadable(USB)
+        setUSBPermissions(USB)
 
 def main():
 
