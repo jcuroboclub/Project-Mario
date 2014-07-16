@@ -1,4 +1,5 @@
 import serial
+import os
 from PiExceptions import *
 from queue import Queue
 from threading import Thread
@@ -7,11 +8,19 @@ class SerialPort:
 
     QUEUE_SIZE = 256
     
+    {
+
+        }
+    
     def __init__(self, portNumber, baudRate):
 
-        # Decrement the port number as the serial module starts
-        # count at 0
-        self._portNumber = portNumber - 1
+        if os.name == "posix":
+            self._portNumber = '/dev/ttyASM' + portNumber
+        else:
+            # Decrement the port number as the windows serial module starts
+            # count at 0
+            self._portNumber = portNumber - 1
+
         self._baudRate = baudRate
         
         self._receiveQueue = Queue(SerialPort.QUEUE_SIZE)
