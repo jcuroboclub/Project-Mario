@@ -18,7 +18,7 @@ def serial_ports():
         return result
 
     elif sys.platform.startswith('linux'):
-        return glob.glob('/dev/tty*')
+        return glob.glob('/dev/rf*')
 
     elif sys.platform.startswith('darwin'):
         return glob.glob('/dev/tty.*')
@@ -143,13 +143,14 @@ joystick.configure()
 
 print("Select port:")
 ports = serial_ports()
-for i in range(len(ports)):
-    print("{0}: {1}".format(i+1, ports[i]))
+rfPorts = [s for s in ports if "rf" in s]
+for i in range(len(rfPorts)):
+    print("{0}: {1}".format(i+1, rfPorts[i]))
 port = None
 while not port:
     s = raw_input(">")
     try:
-        port = ports[int(s)-1]
+        port = rfPorts[int(s)-1]
     except ValueError:
         print("Select Port:")
 
