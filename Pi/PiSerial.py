@@ -8,10 +8,6 @@ class SerialPort:
 
     QUEUE_SIZE = 256
     
-    {
-
-        }
-    
     def __init__(self, portNumber, baudRate):
 
         if os.name == "posix":
@@ -102,7 +98,7 @@ if __name__ == "__main__":
     else:
         port = 8
         
-    test = SerialPort(0,9600)
+    test = SerialPort(port,9600)
     test.openPort()
     test.beginReceiving()
     
