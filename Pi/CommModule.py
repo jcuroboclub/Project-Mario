@@ -1,6 +1,9 @@
 from subprocess import check_output, call
 import PiSerial
 
+# Write pi user pwd into this file, to allow sudo calls without pwd prompts
+pwdLocation = "~/test/pwd"
+
 def getConnectedUSBLocations():
 
     connectedUSB = check_output('ls /dev/ttyACM*', shell=True).strip()
@@ -10,12 +13,9 @@ def getConnectedUSBLocations():
     return USBList
 
 def setUSBReadable(USBLocation):
-    call(str.format("chmod 666 {0}", USBLocation.decode('utf-8')), shell=True)
+    call(str.format("sudo chmod 666 {0} < {1}", USBLocation.decode('utf-8'), pwdLocation), shell=True)
 
 def initialiseUSB():
-
-    # Trying a REALLY dirty work around
-    call('su')
 
     USBList = getConnectedUSBLocations()
 
