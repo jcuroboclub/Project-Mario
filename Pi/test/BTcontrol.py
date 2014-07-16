@@ -18,7 +18,7 @@ def serial_ports():
         return result
 
     elif sys.platform.startswith('linux'):
-        return glob.glob('/dev/tty*')
+        return glob.glob('/dev/rf*')
 
     elif sys.platform.startswith('darwin'):
         return glob.glob('/dev/tty.*')
@@ -181,9 +181,7 @@ for i in range(pygame.joystick.get_count()):
     joystick[i] = InputDevice()
     joystick[i].start(i)
     joystick[i].configure()
-
     port = choose_serial()
-
     ser[i] = serial.Serial(port, baudrate=9600)
 
 while True:
