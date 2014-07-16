@@ -28,7 +28,7 @@ def control_steering(thrust, theta):
 	# assumes theta in degrees and thrust = -1 (100% rev) to 1 (100% fwd)
 	# returns a tuple of percentages: (left_thrust [-1,1], right_thrust [-1,1])
 	theta = ((theta + 180) % 360) - 180  # normalize value to [-180, 180)
-	thrust = min(max(-1, thrust), 1)              # normalize value to [-1, 1]
+	thrust = min(max(-1, thrust), 2)              # normalize value to [-1, 1.5]
 
 	left = thrust*(theta/90.0 + 0.5);
 	left = abs(left+1)-1;
@@ -60,6 +60,7 @@ class InputDevice:
         self._clock = pygame.time.Clock()
         self._speed = 0
         self._dir = 0
+        self._boost = 1
 
     def start(self, id):
         """init joystick"""
@@ -108,9 +109,21 @@ class InputDevice:
             self._clock.tick(10)
         print("Reverse button set as button {}".format(self._revBtn))
 
+        print("Press powerup activate")
+        self._powBtn = -1
+        while self._powBtn < 0: # wait for config
+            try:
+                for e in pygame.event.get():
+                    if (e.type == JOYBUTTONDOWN):
+                        self._powBtn = e.button # configure
+            except Exception:
+                None
+            self._clock.tick(10)
+        print("Reverse button set as button {}".format(self._revBtn))
+
     def getSpeed(self):
         """Get fwd/rev direction"""
-        return self._speed
+        return self._speed * self._boost
 
     def getDir(self):
         """Get turning value"""
@@ -125,11 +138,15 @@ class InputDevice:
                         self._speed = 1
                     elif e.button == self._revBtn:
                         self._speed = -1
+                    elif e.button == self._powBtn:
+                        self._boost = 2
                 elif e.type == JOYBUTTONUP:
                     if e.button == self._accBtn:
                         self._speed = 0
                     elif e.button == self._revBtn:
                         self._speed = 0
+                    elif e.button == self._powBtn:
+                        self._boost = 1
                 elif e.type == JOYAXISMOTION:
                     if e.axis == self._steeringAxis:
                         self._dir = self._js.get_axis(self._steeringAxis)
