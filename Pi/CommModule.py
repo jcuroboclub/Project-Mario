@@ -21,6 +21,8 @@ def initialiseUSB():
 
 def main():
 
+    initialiseUSB()
+
 
 if __name__ == "__main__":
     main()
