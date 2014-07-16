@@ -23,6 +23,19 @@ def serial_ports():
     elif sys.platform.startswith('darwin'):
         return glob.glob('/dev/tty.*')
 
+def choose_serial():
+    print("Select port:")
+    ports = serial_ports()
+    for i in range(len(ports)):
+        print("{0}: {1}".format(i+1, ports[i]))
+    port = None
+    while not port:
+        s = raw_input(">")
+        try:
+            return ports[int(s)-1]
+        except ValueError:
+            print("Select Port:")
+
 # http://robotics.stackexchange.com/questions/2011/how-to-calculate-the-right-and-left-speed-for-a-tank-like-rover
 def control_steering(thrust, theta):
 	# assumes theta in degrees and thrust = -1 (100% rev) to 1 (100% fwd)
@@ -54,6 +67,8 @@ class FakeSerial:
 
 class InputDevice:
     """"""
+    devs = {}
+
     def __init__(self):
         pygame.init()
         pygame.joystick.init()
@@ -66,6 +81,7 @@ class InputDevice:
         """init joystick"""
         self._js = pygame.joystick.Joystick(id)
         self._js.init()
+        InputDevice.devs[id] = self
         print("Using {0}: {1}".format(self._js.get_name(), self._js.get_id()))
 
     def configure(self):
@@ -129,58 +145,58 @@ class InputDevice:
         """Get turning value"""
         return self._dir
 
-    def readInput(self):
+    @staticmethod
+    def readInput():
         """Update input from controller (parse events)."""
         for e in pygame.event.get():
             try:
+                id = e.joy
+                print id
+                dev = InputDevice.devs[id]
                 if e.type == JOYBUTTONDOWN:
-                    if e.button == self._accBtn:
-                        self._speed = 1
-                    elif e.button == self._revBtn:
-                        self._speed = -1
-                    elif e.button == self._powBtn:
-                        self._boost = 2
+                    if e.button == dev._accBtn:
+                        dev._speed = 1
+                    elif e.button == dev._revBtn:
+                        dev._speed = -1
+                    elif e.button == dev._powBtn:
+                        dev._boost = 2
                 elif e.type == JOYBUTTONUP:
-                    if e.button == self._accBtn:
-                        self._speed = 0
-                    elif e.button == self._revBtn:
-                        self._speed = 0
-                    elif e.button == self._powBtn:
-                        self._boost = 1
+                    if e.button == dev._accBtn:
+                        dev._speed = 0
+                    elif e.button == dev._revBtn:
+                        dev._speed = 0
+                    elif e.button == dev._powBtn:
+                        dev._boost = 1
                 elif e.type == JOYAXISMOTION:
-                    if e.axis == self._steeringAxis:
-                        self._dir = self._js.get_axis(self._steeringAxis)
+                    if e.axis == dev._steeringAxis:
+                        dev._dir = dev._js.get_axis(dev._steeringAxis)
             except Exception:
                 None
 
+pygame.init()
+pygame.joystick.init()
+joystick = {}
+ser = {}
+for i in range(pygame.joystick.get_count()):
+    joystick[i] = InputDevice()
+    joystick[i].start(i)
+    joystick[i].configure()
 
-joystick = InputDevice()
-joystick.start(0)
-joystick.configure()
+    port = choose_serial()
 
-print("Select port:")
-ports = serial_ports()
-for i in range(len(ports)):
-    print("{0}: {1}".format(i+1, ports[i]))
-port = None
-while not port:
-    s = raw_input(">")
-    try:
-        port = ports[int(s)-1]
-    except ValueError:
-        print("Select Port:")
-
-
-ser = serial.Serial( port, baudrate=9600 )
-#ser = FakeSerial()
+    ser[i] = serial.Serial(port, baudrate=9600)
 
 while True:
-    joystick.readInput()
+    InputDevice.readInput()
+    for i in range(pygame.joystick.get_count()):
 
-    left, right = control_steering(joystick.getSpeed(), joystick.getDir()*30)
-    left, right = format_steering(left, right)
+        left, right = control_steering(
+            joystick[i].getSpeed(), joystick[i].getDir()*30)
+        left, right = format_steering(left, right)
 
-    ser.write(str(chr(0)) + str(chr(left)) + str(chr(right)) + str(chr(1)) + "\n")
-    print(str(left) + " " + str(right) + " " + str(0) + "\n")
+        ser[i].write(
+            str(chr(0)) + str(chr(left)) + str(chr(right)) + str(chr(1)) + "\n")
+        print("Joystick " + str(i) + ": " + str(left) + " " + str(right) + \
+            " " + str(0) + "\n")
 
     time.sleep(.05)
