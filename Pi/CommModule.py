@@ -31,7 +31,7 @@ class CommunicationModule:
             setUSBPermissions(USB)
 
             portNumber = int(USB.lstrip(bytes(USBDir, encoding)))
-            self._portDict{portNumber} = SerialPort(portNumber, baudRate)
+            self._portDict[portNumber] = SerialPort(portNumber, baudRate)
 
     def main():
 
