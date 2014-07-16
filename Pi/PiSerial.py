@@ -15,7 +15,7 @@ class SerialPort:
     def __init__(self, portNumber, baudRate):
 
         if os.name == "posix":
-            self._portNumber = '/dev/ttyASM' + portNumber
+            self._portNumber = '/dev/ttyASM' + str(portNumber)
         else:
             # Decrement the port number as the windows serial module starts
             # count at 0
@@ -82,7 +82,7 @@ class SerialPort:
         
     def closePort(self):
         # Make sure the port isn't already closed
-        if self.isPortOpen():
+        if not self.isPortOpen():
             raise SerialPortException("Serial Port is either already closed or not initialised.")
 
         # Set the termination flag and wait for the thread to terminate execution
@@ -96,10 +96,18 @@ class SerialPort:
 
 # Basic test stuff for if this script is called
 if __name__ == "__main__":
-    test = SerialPort(8,9600)
+    
+    if os.name == "posix":
+        port = 0
+    else:
+        port = 8
+        
+    test = SerialPort(0,9600)
     test.openPort()
     test.beginReceiving()
+    
     input("Wait a second to collect some data\n")
+    
     data = test.readBuffer()
     for datum in data:
         print(datum)
