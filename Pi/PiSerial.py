@@ -5,7 +5,7 @@ from threading import Thread
 
 class SerialPort:
 
-    __QUEUE_SIZE = 256
+    QUEUE_SIZE = 256
     
     def __init__(self, portNumber, baudRate):
 
@@ -14,14 +14,14 @@ class SerialPort:
         self._portNumber = portNumber - 1
         self._baudRate = baudRate
         
-        self._receiveQueue = Queue(SerialPort.__QUEUE_SIZE)
+        self._receiveQueue = Queue(SerialPort.QUEUE_SIZE)
 
         # Thread, Comm, and thread flag initialisation
         self.reset()
 
     def openPort(self):
         # Check to make sure the port isn't already created or open
-        if self._serialPort is not None and self._serialPort.isOpen():
+        if self.isPortOpen():
             raise SerialPortException("Serial Port is already openned.")
 
         # Create and open the serial port
@@ -60,6 +60,9 @@ class SerialPort:
 
         return output
 
+    def isPortOpen(self):
+        return self._serialPort is not None and self._serialPort.isOpen()
+        
     def reset(self):
         # Initialise the serial port and comm thread to null
         self._serialPort = None
@@ -70,7 +73,7 @@ class SerialPort:
         
     def closePort(self):
         # Make sure the port isn't already closed
-        if self._serialPort is None or not self._serialPort.isOpen():
+        if self.isPortOpen():
             raise SerialPortException("Serial Port is either already closed or not initialised.")
 
         # Set the termination flag and wait for the thread to terminate execution
