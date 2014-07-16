@@ -9,7 +9,7 @@ class CommunicationModule:
     encoding = "UTF-8"
     baudRate = 9600
 
-    def getConnectedUSBLocations():
+    def getConnectedUSBLocations(self):
 
         connectedUSB = check_output(str.format('ls {0}*', USBDir), shell=True).strip()
 
@@ -17,11 +17,11 @@ class CommunicationModule:
 
         return USBList
 
-    def setUSBPermissions(USBLocation):
+    def setUSBPermissions(self, USBLocation):
         call(str.format("sudo chmod 666 {0} < {1}", USBLocation.decode(encoding),
                         pwdLocation), shell=True)
 
-    def initialiseUSB():
+    def initialiseUSB(self):
 
         USBList = getConnectedUSBLocations()
 
@@ -33,7 +33,7 @@ class CommunicationModule:
             portNumber = int(USB.lstrip(bytes(USBDir, encoding)))
             self._portDict[portNumber] = SerialPort(portNumber, baudRate)
 
-    def main():
+    def main(self):
 
         initialiseUSB()
 
