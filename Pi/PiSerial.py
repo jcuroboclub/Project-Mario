@@ -54,7 +54,7 @@ class SerialPort:
             if self._receiveQueue.full():
                 self._receiveQueue.get()
     
-            self._receiveQueue.put(ArduinoTestPacket(self._serialPort.readline()));
+            self._receiveQueue.put(ArduinoTestPacket(self._serialPort.readline().strip()));
             
     def readBuffer(self):
         # Should think of what is the best output format for this
