@@ -44,12 +44,12 @@ class RFPacket:
     def __str__(self):
         # Many used for visualisation and not an actual string representation of the packet
 
-        target = self._targetNumber.decode(ENCODING)
-        command = self._command.decode(ENCODING)
+        target = self._targetNumber.decode(RFPacket.ENCODING)
+        command = self._command.decode(RFPacket.ENCODING)
         
         data = []
         for datum in self._data:
-            data.append(datum.decode(ENCODING))
+            data.append(datum.decode(RFPacket.ENCODING))
         
         return str.format("Target: {0}\nCommand: {1}\nContent: {2}", target, command, data)
 
@@ -88,7 +88,7 @@ class ArduinoTestPacket:
         """
 
         if len(args) == 1:
-            split = args[0].split(RFPacket.DELIMITER)
+            split = args[0].split(ArduinoTestPacket.DELIMITER)
 
             self._command = split[0]
 
@@ -106,19 +106,19 @@ class ArduinoTestPacket:
         output = self._command
 
         for datum in self._data:
-            output += RFPacket.DELIMITER + datum
+            output += ArduinoTestPacket.DELIMITER + datum
             
         return output
 
     def __str__(self):
         # Many used for visualisation and not an actual string representation of the packet
-        command = self._command.decode(ENCODING)
+        command = self._command.decode(ArduinoTestPacket.ENCODING)
         
         data = []
         for datum in self._data:
-            data.append(datum.decode(ENCODING))
+            data.append(datum.decode(ArduinoTestPacket.ENCODING))
         
-        return str.format("Command: {0}\nContent: {1}", command, data)
+        return str.format("Command: {0}\tContent: {1}", command, data)
     
     def getCommand(self):
         return self._command
