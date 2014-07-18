@@ -32,10 +32,6 @@ int lastError = 0;
 // Program control
 // Start flag
 byte startMessageReceived = 0;
-// Boost flag
-#define BOOST_DURATION_MS 10000
-unsigned char boostEnable = 0;
-unsigned long boostTime = 0; // Timer to turn off boost
 
 // Speed control
 const int MAX_SPEED = 400; // 400 is full bore
