@@ -18,31 +18,21 @@
 #include <ZumoMotors.h>
 #include <ZumoBuzzer.h>
 #include <Pushbutton.h>
-#include "Messenger.h"
 #include "Adafruit_NeoPixel.h"
 #include "StateMachine.h"
 
 // Zumo stuff
 ZumoBuzzer buzzer;
-ZumoReflectanceSensorArray reflectanceSensors;
+//ZumoReflectanceSensorArray reflectanceSensors;
 ZumoMotors motors;
 Pushbutton button(ZUMO_BUTTON);
-int lastError = 0;
-
-// Program control
-// Start flag
-byte startMessageReceived = 0;
+#define MAX_SPEED 400
 
 // Speed control
-const int MAX_SPEED = 400; // 400 is full bore
-const int NORM_SPEED = 300;
-int topSpeed = NORM_SPEED;
-int kartSpeed = 0;
-int previousKartSpeed = 0;
-int turnSpeed = 0;
-
-//Communications
-Messenger message = Messenger(',');
+int leftSpeed = 0;
+int rightSpeed = 0;
+int averageSpeed = 0;
+int previousAverageSpeed = 0;
 
 //LEDs
 Adafruit_NeoPixel ledStrip = Adafruit_NeoPixel(2, 11, NEO_GRB + NEO_KHZ800);
@@ -60,15 +50,19 @@ StateMachine ledStateMachine = StateMachine(ledStateMachineCallback);
 #define POWERUP_BOOST 1
 StateMachine powerupStateMachine = StateMachine(powerupStateMachineCallback);
 
+//Message buffer
+unsigned char messageState = 0;
+unsigned char messageInPtr = 0;
+unsigned char message[4];
 
 void setup()
 {
   //Init comms
-  Serial.begin(57600);
+  Serial.begin(9600);
   Serial.println("Mario Kart");
-  message.attach(messageCompleted);
+  //message.attach(messageCompleted);
   
-  //Init LEDs
+  //Init LEDs to blue
   ledStrip.begin();
   ledStrip.setPixelColor(0,0,0,0x33);
   ledStrip.setPixelColor(1,0,0,0x33);
@@ -76,17 +70,15 @@ void setup()
   
   // Play a little welcome song
   buzzer.play(">g32>>c32");
-  //Turn on LED to indicate waiting for comms init message
+  
+  //Wait for button press
   pinMode(13, OUTPUT);
   digitalWrite(13, HIGH);
-
-  //Stop motors
-  motors.setSpeeds(0,0);
+  button.waitForButton();
   
-  //Wait for init message:  *i\r\n
-  while(startMessageReceived == 0) checkForComms();
-  Serial.println("Let's Go!!!");
-
+  //Turn off LED
+  digitalWrite(13, LOW);
+  
   //Play music to indicate ready
   buzzer.play("L16 cdegreg4");
   while(buzzer.isPlaying());
@@ -101,18 +93,14 @@ void loop()
   ledStateMachine.update();
   powerupStateMachine.update();
     
-  //Calculate motor speed
-  long baseSpeed = ((long)kartSpeed) * topSpeed / 100;
-  long dirAdjust = baseSpeed * ((long)turnSpeed) / 100;
-  int m1Speed = (int) (baseSpeed + dirAdjust);
-  int m2Speed = (int) (baseSpeed - dirAdjust);
-
+  //Sanity check
+  if (leftSpeed > MAX_SPEED) leftSpeed = MAX_SPEED;
+  if (rightSpeed > MAX_SPEED) rightSpeed = MAX_SPEED;
+  if (leftSpeed < -MAX_SPEED) leftSpeed = -MAX_SPEED;
+  if (rightSpeed < -MAX_SPEED) rightSpeed = -MAX_SPEED; 
+    
   //Set motor speed
-  if (m1Speed > MAX_SPEED)
-    m1Speed = MAX_SPEED;
-  if (m2Speed > MAX_SPEED)
-    m2Speed = MAX_SPEED;
-  motors.setSpeeds(m1Speed, m2Speed);
+  motors.setSpeeds(leftSpeed, rightSpeed);
 }
 
 //
@@ -124,7 +112,6 @@ void powerupStateMachineCallback()
 {
   switch (powerupStateMachine.currentState()) {
     case POWERUP_BOOST:
-      topSpeed = MAX_SPEED;
       powerupStateMachine.nextState(POWERUP_NONE,10000);
       //Change LED state to boosted
       ledStateMachine.nextState(LED_BOOST,0);
@@ -133,7 +120,6 @@ void powerupStateMachineCallback()
       break;
       
     case POWERUP_NONE:
-      topSpeed = NORM_SPEED;
       ledStateMachine.nextState(LED_OFF,0);
       powerupStateMachine.stop();
       break;
@@ -154,6 +140,7 @@ void ledStateMachineCallback()
       case LED_BOOST :
         ledStrip.setPixelColor(0,0x77,0x77,0x00);
         ledStrip.setPixelColor(1,0x00,0x00,0x00);
+        digitalWrite(13,HIGH);
         ledStrip.show();
         ledStateMachine.nextState(LED_BOOST2,50);
         break;
@@ -161,6 +148,7 @@ void ledStateMachineCallback()
       case LED_BOOST2:
         ledStrip.setPixelColor(1,0x77,0x77,0x00);
         ledStrip.setPixelColor(0,0x00,0x00,0x00);
+        digitalWrite(13,LOW);
         ledStrip.show();
         ledStateMachine.nextState(LED_BOOST,50);
         break;
@@ -189,60 +177,73 @@ void ledStateMachineCallback()
 }
 
 //
-// Passes any incoming bytes to message object
+// Process incoming bytes
 //
 void checkForComms()
 {
-  while(Serial.available())  message.process(Serial.read());
+  while(Serial.available()) {
+    byte b = Serial.read();
+    
+    switch (messageState) {
+      //Waiting for start byte
+      case 0:
+      if(b == 0x00) {
+        messageState = 1;
+        messageInPtr = 0;
+      }
+      break;
+      
+      // Store bytes
+      case 1:
+      message[messageInPtr] = b;
+      messageInPtr++;
+      if (messageInPtr >= 3) messageState = 2;
+      break;
+      
+      // Process bytes
+      case 2:
+      setSpeed(message[0],message[1]);
+      setState(message[2]);
+      messageState = 0;
+      break;
+    }
+  }  
 }
 
-//
-// message callback
-//
-void messageCompleted()
-{
-  // Boost 
-  // Format:  *b/r/n
-  // Function: boosts top speed for 10 seconds
-  if (message.checkString("*b")) {
-    setPowerup();
-  }
-  // Comms init
-  // Format:  *i\r\n
-  // Function: Indicate comms system connected
-  if (message.checkString("*i")) {
-    startMessageReceived = 1;
-  }
-  // Speed
-  // Format: *s,speed,direction\r\n
-  // Function: Set speed and direction of zumo
-  if (message.checkString("*s")) {
-    setSpeedDir(message.readInt(),message.readInt());
-  }
-}
 
-void setSpeedDir(int speed, int dir) 
+//
+// Set speeds and check if brake lights need to come on
+//
+void setSpeed(unsigned char left, unsigned char right) 
 {
-  kartSpeed = speed;
-  turnSpeed = dir;
+  leftSpeed = ((int)left - 64) * 25 / 4;
+  rightSpeed = ((int)right - 64) * 25 / 4;
+  
+  averageSpeed = (leftSpeed + rightSpeed) / 2;
   
   //If not boosted, check if brake or reverse lights required
   if(powerupStateMachine.currentState() == POWERUP_NONE) {
     //If going backwards, turn on brake lights
-    if (kartSpeed < 0) {
+    if (averageSpeed < 0) {
       ledStateMachine.nextState(LED_REVERSE,0);
     }
     //If braking, turn on brake lights
-    else if (kartSpeed < previousKartSpeed - 20) {
+    else if (averageSpeed < previousAverageSpeed - 20) {
       ledStateMachine.nextState(LED_BRAKE,0);
     }
-    previousKartSpeed = kartSpeed;
+    previousAverageSpeed = averageSpeed;
   }
 }
 
-void setPowerup() 
+//
+// Kart states
+//
+// 1 = POWERUP_BOOST
+void setState(unsigned char state) 
 {
-  //Enable boost state
-  powerupStateMachine.nextState(POWERUP_BOOST,0);
+  if (state != 0) {
+    //Enable state
+    powerupStateMachine.nextState(state,0);
+  }
 }
   
