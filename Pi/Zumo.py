@@ -1,11 +1,18 @@
 import unittest, time
 from threading import Thread, Event
+from Queue import Queue
 
 class ControlThread(Thread):
-	"""Handles communications. Is a continuous timer.
+	"""Handles communications. Is a continuous timer. Also implements protocol.
 	http://stackoverflow.com/questions/12435211/python-threading-timer-repeat-function-every-n-seconds
 	"""
 	def __init__(self, stopEvent, zumo, connection, time):
+		"""stopEvent, and Event object, used as a flag to prevent sending. Call
+		stopEvent.set() to kill this process.
+		zumo is the Zumo reference where the data is retrieved to be sent.
+		connection is where the data is to be sent by calling the write(String)
+		method.
+		time is the period between messages, in seconds."""
 		Thread.__init__(self)
 		self.daemon = True
 		self.stopped = stopEvent
@@ -18,14 +25,14 @@ class ControlThread(Thread):
 				self.connection.write(str(chr(0)) + \
 					str(self.zumo.getLeft()) + str(self.zumo.getRight()) + \
 					str(self.zumo.getAux()) + "\n")
+		# Thread is killed when run() ends
 
 class TestControlThread(unittest.TestCase):
 	def setUp(self):
 		self.connection = _FakeConnection()
 		self.zumo = Zumo(self.connection)
-		self.stopFlag = Event()
-		self.thread = ControlThread(self.stopFlag, self.zumo, self.connection, 0.01)
-		self.thread.start()
+		self.stopFlag = self.zumo._stopFlag
+		self.zumo.beginControl()
 		time.sleep(0.011)
 
 	def test_init(self):
@@ -62,32 +69,82 @@ class TestControlThread(unittest.TestCase):
 		self.assertEqual(chr(64), self.connection.msg[2], \
 			"After 2 Right Wheel Speed")
 
+	def test_stop(self):
+		# change
+		self.zumo.controlThrustSteer(1,0)
+		time.sleep(0.011)
+		self.assertEqual(chr(96), self.connection.msg[1], \
+			"After 1 Left Wheel Speed")
+		self.assertEqual(chr(96), self.connection.msg[2], \
+			"After 1 Right Wheel Speed")
+		# stop and change again, expect it not to affect
+		self.stopFlag.set()
+		self.zumo.controlThrustSteer(0,0)
+		time.sleep(0.011)
+		self.assertEqual(chr(96), self.connection.msg[1], \
+			"After stopping Left Wheel Speed")
+		self.assertEqual(chr(96), self.connection.msg[2], \
+			"After stopping Right Wheel Speed")
+		# check permanence
+		self.stopFlag.clear()
+		time.sleep(0.011)
+		self.assertEqual(chr(96), self.connection.msg[1], \
+			"After restarting Left Wheel Speed (Shouldn't restart)")
+		self.assertEqual(chr(96), self.connection.msg[2], \
+			"After restarting Right Wheel Speed (Shouldn't restart)")
+
 class Zumo:
 	"""Logic for Zumo."""
-	NONE = 1
+	NO_AUX = 1
+
+	# LED Aux
+	BLACK = 2
+	RED = 3
+	YELLOW = 4
+	GREEN = 5
+	CYAN = 6
+	BLUE = 7
+	MAGENTA = 8
+	WHITE = 9
+
+	# Buzzer Aux
+	POWERUP = 10
+	POWERDOWN = 11
+
+	QUEUE_SIZE = 10
+	TICK = 0.01 # 10ms
+	TURN_ANGLE = 30 # degrees turn corresponding to full turn
 
 	def __init__(self, connection):
-		self._connection = connection
+		"""Initialise a Zumo. Requires a connection, which can be anything
+		that implements a write() method taking a string as an argument. The
+		intention is for this to send messages to the physical Zumo.
+		"""
 		self._left = 64
 		self._right = 64
-		self._aux = Zumo.NONE
+		self._auxQueue = Queue(Zumo.QUEUE_SIZE)
+		self._connection = connection
 
-	def beginControl(self, updateTime):
-		"""Begins a thread for controlling the Zumo."""
-		self._tick = updateTime
-		self._controlThread = Thread(target = self._control)
+		self._stopFlag = Event()
+		self._controlThread = ControlThread(
+			self._stopFlag, self, self._connection, Zumo.TICK)
 		self._controlThread.daemon = True
+
+	def beginControl(self):
+		"""Begins a thread for controlling the Zumo."""
 		self._controlThread.start()
-		self._control
 
 	def controlThrustSteer(self, thrust, steering):
-		"""Provide updated control information from joystick."""
-		left, right = self._controlSteering(thrust, steering)
+		"""Provide updated control information from joystick.
+		Thrust and Steering expected domain: [-1,1]
+		-1: left/rev
+		1: right/fwd
+		"""
+		left, right = self._controlSteering(thrust, steering * Zumo.TURN_ANGLE)
 		self._left, self._right = self._coerceSteering(left, right)
 
 	def _controlSteering(self, thrust, theta):
-		"""
-		assumes theta in degrees and thrust = -1 (100% rev) to 1 (100% fwd)
+		"""assumes theta in degrees and thrust = -1 (100% rev) to 1 (100% fwd)
 		returns a tuple: (left_thrust [-1,1], right_thrust [-1,1])
 		http://robotics.stackexchange.com/questions/2011/how-to-calculate-the-right-and-left-speed-for-a-tank-like-rover
 		"""
@@ -118,7 +175,54 @@ class Zumo:
 		return chr(self._right)
 
 	def getAux(self):
-		return chr(self._aux)
+		if self._auxQueue.empty():
+			return chr(Zumo.NO_AUX)
+		else:
+			return chr(self._auxQueue.get())
+
+	def setLED(self, state):
+		self._auxQueue.put(state)
+
+	def playSound(self, state):
+		self._auxQueue.put(state)
+
+class TestZumo(unittest.TestCase):
+	def setUp(self):
+		self.connection = _FakeConnection()
+		self.zumo = Zumo(self.connection)
+
+	def test_Constructor(self):
+		self.assertEqual(chr(64), self.zumo.getLeft(), "Init values")
+		self.assertEqual(chr(64), self.zumo.getRight(), "Init values")
+		self.assertEqual(chr(Zumo.NO_AUX), self.zumo.getAux(), "Init values")
+
+	def test_Forwards(self):
+		self.zumo.controlThrustSteer(1, 0)
+		self.assertEqual(chr(96), self.zumo.getLeft())
+		self.assertEqual(chr(96), self.zumo.getRight())
+
+	def test_FwdLeft(self):
+		self.zumo.controlThrustSteer(1, -1)
+		self.assertEqual(chr(74), self.zumo.getLeft(), "Slower left")
+		self.assertEqual(chr(117), self.zumo.getRight(), "Faster right")
+
+	def test_FwdRight(self):
+		self.zumo.controlThrustSteer(1, 1)
+		self.assertEqual(chr(117), self.zumo.getLeft(), "Faster left")
+		self.assertEqual(chr(74), self.zumo.getRight(), "Slower right")
+
+	def test_Reverse(self):
+		self.zumo.controlThrustSteer(-1, 0)
+		self.assertEqual(chr(32), self.zumo.getLeft())
+		self.assertEqual(chr(32), self.zumo.getRight())
+
+	def test_LED_and_Sound(self):
+		self.zumo.setLED(Zumo.WHITE)
+		self.assertEqual(chr(Zumo.WHITE), self.zumo.getAux(), "Sets Aux")
+		self.assertEqual(chr(Zumo.NO_AUX), self.zumo.getAux(), "Aux is once-off")
+		self.zumo.playSound(Zumo.POWERUP)
+		self.assertEqual(chr(Zumo.POWERUP), self.zumo.getAux(), "Sets Aux")
+		self.assertEqual(chr(Zumo.NO_AUX), self.zumo.getAux(), "Aux is once-off")
 
 class _FakeConnection:
 	def __init__(self):

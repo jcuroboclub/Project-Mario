@@ -2,6 +2,16 @@
 
 The brains of the game. This module includes game logic, reading the joysticks, sending serial messages to varioud Arduino modules (RFID stations, Zumos), etc..
 
+## Required Modules
+Python 2.7
+sudo apt-get install python
+
+PyGame
+sudo apt-get install python-pygame
+
+PySerial
+sudo apt-get install python-pyserial
+
 ## Discussion
 
 Joystick input could be implemented using the pygame API, joystick module.
