@@ -1,8 +1,10 @@
-import sys, glob, pygame.joystick, unittest
+import sys, glob, time, pygame.joystick, unittest
+from threading import Thread, Event
 
 class InputDevice:
     """Handles the joystick input."""
     devs = {}
+    _updateThread = None
 
     def __init__(self):
         pygame.init()
@@ -57,29 +59,39 @@ class InputDevice:
     @staticmethod
     def readInput():
         """Update input from controller (parse events)."""
-        for e in pygame.event.get():
-            try:
-                id = e.joy
-                dev = InputDevice.devs[id]
-                if e.type == JOYBUTTONDOWN:
-                    if e.button == dev._accBtn:
-                        dev._speed = 1
-                    elif e.button == dev._revBtn:
-                        dev._speed = -1
-                    elif e.button == dev._powBtn:
-                        dev._boost = 2
-                elif e.type == JOYBUTTONUP:
-                    if e.button == dev._accBtn:
-                        dev._speed = 0
-                    elif e.button == dev._revBtn:
-                        dev._speed = 0
-                    elif e.button == dev._powBtn:
-                        dev._boost = 1
-                elif e.type == JOYAXISMOTION:
-                    if e.axis == dev._steeringAxis:
-                        dev._dir = dev.js.get_axis(dev._steeringAxis)
-            except Exception:
-                None
+        while True:
+            for e in pygame.event.get():
+                try:
+                    id = e.joy
+                    dev = InputDevice.devs[id]
+                    if e.type == JOYBUTTONDOWN: # button press
+                        print("Player {0} Pressed {1}".format(id, e.button))
+                        if e.button == dev._accBtn:
+                            dev._speed = 1
+                        elif e.button == dev._revBtn:
+                            dev._speed = -1
+                        elif e.button == dev._powBtn:
+                            dev._boost = 2
+                    elif e.type == JOYBUTTONUP:
+                        if e.button == dev._accBtn:
+                            dev._speed = 0
+                        elif e.button == dev._revBtn:
+                            dev._speed = 0
+                        elif e.button == dev._powBtn:
+                            dev._boost = 1
+                    elif e.type == JOYAXISMOTION:
+                        if e.axis == dev._steeringAxis:
+                            dev._dir = dev.js.get_axis(dev._steeringAxis)
+                except Exception:
+                    None
+            time.sleep(0.01) # throttle
+
+    @staticmethod
+    def startReadThread(time):
+        if InputDevice._updateThread is None: # check not already running
+            InputDevice._updateThread = Thread(target = InputDevice.readInput)
+            InputDevice._updateThread.daemon = True
+            InputDevice._updateThread.start()
 
 class TestInputDevice(unittest.TestCase):
     """Note: For these tests to pass there must be two controllers

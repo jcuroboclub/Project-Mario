@@ -17,12 +17,22 @@ class ControlThread(Thread):
 		self.zumo = zumo
 		self.connection = connection
 		self.tick = time
+		self._thrustFunc = None
+		self._steerFunc = None
+
+	def setControl(self, thrustFunc, steerFunc):
+		self._thrustFunc = thrustFunc
+		self._steerFunc = steerFunc
 
 	def run(self):
 		while not self.stopped.wait(self.tick):
-				self.connection.write(str(chr(0)) + \
-					str(self.zumo.getLeft()) + str(self.zumo.getRight()) + \
-					str(self.zumo.getAux()) + "\n")
+			if (self._thrustFunc is not None) & (self._steerFunc is not None):
+				self.zumo.controlThrustSteer(
+					self._thrustFunc(), self._steerFunc())
+				print self._thrustFunc() ###
+			self.connection.write(str(chr(0)) + \
+				str(self.zumo.getLeft()) + str(self.zumo.getRight()) + \
+				str(self.zumo.getAux()) + "\n")
 		# Thread is killed when run() ends
 
 	def stop(self):
@@ -118,6 +128,13 @@ class Zumo:
 
 		self._controlThread = ControlThread(self, connection, time)
 		self._controlThread.daemon = True
+
+	def beginControlThrustSteer(self, thrustFunc, steerFunc):
+		"""Begins a thread for controlling the Zumo. Uses thrustFunc to get the
+		thrust value and steerFunc to get the steering value.
+		"""
+		self._controlThread.setControl(thrustFunc, steerFunc)
+		self._controlThread.start()
 
 	def beginControl(self):
 		"""Begins a thread for controlling the Zumo."""
