@@ -10,7 +10,6 @@ class InputDevice:
         self._clock = pygame.time.Clock()
         self._speed = 0
         self._dir = 0
-        self._boost = 1
 
     def start(self, id):
         """init joystick"""
@@ -18,69 +17,23 @@ class InputDevice:
         self.js.init()
         InputDevice.devs[id] = self
 
-    def configure(self):
-        js = self.js
-        """config joystick input"""
-        print("Found {} axes".format(js.get_numaxes()))
-        print("Wiggle steering")
-        self._steeringAxis = -1
-        while self._steeringAxis < 0: # wait for config
-            try:
-                for e in pygame.event.get():
-                    if (e.type == JOYAXISMOTION) & (
-                        abs(js.get_axis(e.axis)) > 0.5): # if value is more than a half
-                        self._steeringAxis = e.axis # configure
-            except Exception:
-                None
-            self._clock.tick(10)
-        print("Steering axis set as axis {}".format(self._steeringAxis))
-
-        print("Press go")
-        self._accBtn = -1
-        while self._accBtn < 0: # wait for config
-            try:
-                for e in pygame.event.get():
-                    if (e.type == JOYBUTTONDOWN):
-                        self._accBtn = e.button # configure
-            except Exception:
-                None
-            self._clock.tick(10)
-        print("Acceleration button set as button {}".format(self._accBtn))
-
-        print("Press reverse")
-        self._revBtn = -1
-        while self._revBtn < 0: # wait for config
-            try:
-                for e in pygame.event.get():
-                    if (e.type == JOYBUTTONDOWN):
-                        self._revBtn = e.button # configure
-            except Exception:
-                None
-            self._clock.tick(10)
-        print("Reverse button set as button {}".format(self._revBtn))
-
-        print("Press powerup activate")
-        self._powBtn = -1
-        while self._powBtn < 0: # wait for config
-            try:
-                for e in pygame.event.get():
-                    if (e.type == JOYBUTTONDOWN):
-                        self._powBtn = e.button # configure
-            except Exception:
-                None
-            self._clock.tick(10)
-        print("Reverse button set as button {}".format(self._revBtn))
+    def configure(self, steeringAxis, accBtn, revBtn, powBtn):
+        """Configure axis and button IDs for the current joystick."""
+        self._steeringAxis = steeringAxis
+        self._accBtn = accBtn
+        self._revBtn = revBtn
+        self._powBtn = powBtn
 
     def getSpeed(self):
         """Get fwd/rev direction"""
-        return self._speed * self._boost
+        return self._speed
 
     def getDir(self):
         """Get turning value"""
         return self._dir
 
     @staticmethod
-    def serial_ports():
+    def serialPorts():
         """Returns all available COM ports
         http://stackoverflow.com/questions/12090503/listing-available-com-ports-with-python
         """
@@ -130,9 +83,20 @@ class InputDevice:
                 None
 
 class TestInputDevice(unittest.TestCase):
+    """Note: For these tests to pass there must be two controllers
+    plugged in.
+    """
     def setUp(self):
-        joystick1 = InputDevice()
-        joystick1.start()
-        joystick2 = InputDevice()
-        joystick2.start()
+        self.joystick1 = InputDevice()
+        self.joystick1.start(0)
+        self.joystick2 = InputDevice()
+        self.joystick2.start(1)
 
+    def test_initial(self):
+        self.assertEqual(0, self.joystick1.getSpeed(), "Init speed")
+        self.assertEqual(0, self.joystick1.getDir(), "Init direction")
+
+    def test_noInput(self):
+        InputDevice.readInput()
+        self.assertEqual(0, self.joystick1.getSpeed(), "Init speed")
+        self.assertEqual(0, self.joystick1.getDir(), "Init direction")
