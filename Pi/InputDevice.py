@@ -60,7 +60,6 @@ class InputDevice:
         for e in pygame.event.get():
             try:
                 id = e.joy
-                print id
                 dev = InputDevice.devs[id]
                 if e.type == JOYBUTTONDOWN:
                     if e.button == dev._accBtn:
