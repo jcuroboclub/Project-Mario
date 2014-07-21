@@ -25,6 +25,9 @@ You also must type "export COLUMNS" and "export LINES" for colorconsole.
 Git:
 sudo apt-get install pip
 
+Bluetooth:
+http://blog.dawnrobotics.co.uk/2013/11/talking-to-a-bluetooth-serial-module-with-a-raspberry-pi/
+
 ## Discussion
 
 Joystick input could be implemented using the pygame API, joystick module.
