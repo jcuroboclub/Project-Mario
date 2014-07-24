@@ -90,39 +90,42 @@ class InputDevice:
         print("Found {} axes".format(js.get_numaxes()))
         print("Wiggle steering")
         self._steeringAxis = -1
-        while self._steeringAxis < 0: # wait for config
-            try:
-                for e in pygame.event.get():
-                    if (e.type == JOYAXISMOTION) & (
-                        abs(js.get_axis(e.axis)) > 0.5): # if value is more than a half
-                        self._steeringAxis = e.axis # configure
-            except Exception:
-                None
-            self._clock.tick(10)
+        #while self._steeringAxis < 0: # wait for config
+        #    try:
+        #        for e in pygame.event.get():
+        #            if (e.type == JOYAXISMOTION) & (
+        #                abs(js.get_axis(e.axis)) > 0.5): # if value is more than a half
+        #                self._steeringAxis = e.axis # configure
+        #    except Exception:
+        #        None
+        #    self._clock.tick(10)
+	self._steeringAxis = 0 # configure
         print("Steering axis set as axis {}".format(self._steeringAxis))
 
         print("Press go")
         self._accBtn = -1
-        while self._accBtn < 0: # wait for config
-            try:
-                for e in pygame.event.get():
-                    if (e.type == JOYBUTTONDOWN):
-                        self._accBtn = e.button # configure
-            except Exception:
-                None
-            self._clock.tick(10)
+        #while self._accBtn < 0: # wait for config
+        #    try:
+        #        for e in pygame.event.get():
+        #            if (e.type == JOYBUTTONDOWN):
+        #                self._accBtn = e.button # configure
+        #    except Exception:
+        #        None
+        #    self._clock.tick(10)
+	self._accBtn = 2 # configure
         print("Acceleration button set as button {}".format(self._accBtn))
 
         print("Press reverse")
-        self._revBtn = -1
-        while self._revBtn < 0: # wait for config
-            try:
-                for e in pygame.event.get():
-                    if (e.type == JOYBUTTONDOWN):
-                        self._revBtn = e.button # configure
-            except Exception:
-                None
-            self._clock.tick(10)
+        #self._revBtn = -1
+        #while self._revBtn < 0: # wait for config
+        #    try:
+        #       for e in pygame.event.get():
+        #            if (e.type == JOYBUTTONDOWN):
+        #                self._revBtn = e.button # configure
+        #    except Exception:
+        #        None
+        #    self._clock.tick(10)
+	self._revBtn = 1 # configure
         print("Reverse button set as button {}".format(self._revBtn))
 
         print("Press powerup activate")
@@ -135,7 +138,7 @@ class InputDevice:
             except Exception:
                 None
             self._clock.tick(10)
-        print("Reverse button set as button {}".format(self._revBtn))
+        print("Reverse button set as button {}".format(self._powBtn))
 
     def getSpeed(self):
         """Get fwd/rev direction"""
