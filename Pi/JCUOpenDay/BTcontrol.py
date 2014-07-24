@@ -88,8 +88,8 @@ class InputDevice:
         js = self._js
         """config joystick input"""
         print("Found {} axes".format(js.get_numaxes()))
-        print("Wiggle steering")
-        self._steeringAxis = -1
+        #print("Wiggle steering")
+        #self._steeringAxis = -1
         #while self._steeringAxis < 0: # wait for config
         #    try:
         #        for e in pygame.event.get():
@@ -102,8 +102,8 @@ class InputDevice:
 	self._steeringAxis = 0 # configure
         print("Steering axis set as axis {}".format(self._steeringAxis))
 
-        print("Press go")
-        self._accBtn = -1
+        #print("Press go")
+        #self._accBtn = -1
         #while self._accBtn < 0: # wait for config
         #    try:
         #        for e in pygame.event.get():
@@ -115,7 +115,7 @@ class InputDevice:
 	self._accBtn = 2 # configure
         print("Acceleration button set as button {}".format(self._accBtn))
 
-        print("Press reverse")
+        #print("Press reverse")
         #self._revBtn = -1
         #while self._revBtn < 0: # wait for config
         #    try:
@@ -128,16 +128,17 @@ class InputDevice:
 	self._revBtn = 1 # configure
         print("Reverse button set as button {}".format(self._revBtn))
 
-        print("Press powerup activate")
-        self._powBtn = -1
-        while self._powBtn < 0: # wait for config
-            try:
-                for e in pygame.event.get():
-                    if (e.type == JOYBUTTONDOWN):
-                        self._powBtn = e.button # configure
-            except Exception:
-                None
-            self._clock.tick(10)
+        #print("Press powerup activate")
+        #self._powBtn = -1
+        #while self._powBtn < 0: # wait for config
+        #    try:
+        #        for e in pygame.event.get():
+        #            if (e.type == JOYBUTTONDOWN):
+        #                self._powBtn = e.button # configure
+        #    except Exception:
+        #        None
+        #    self._clock.tick(10)
+	self._powBtn = 0 # configure
         print("Reverse button set as button {}".format(self._powBtn))
 
     def getSpeed(self):
