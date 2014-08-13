@@ -64,22 +64,22 @@ class InputDevice:
                 try:
                     id = e.joy
                     dev = InputDevice.devs[id]
-                    if e.type == JOYBUTTONDOWN: # button press
-                        print("Player {0} Pressed {1}".format(id, e.button))
+                    if e.type == 10: # JOYBUTTONDOWN
+                        #print("Player {0} Pressed {1}".format(id, e.button))
                         if e.button == dev._accBtn:
                             dev._speed = 1
                         elif e.button == dev._revBtn:
                             dev._speed = -1
                         elif e.button == dev._powBtn:
                             dev._boost = 2
-                    elif e.type == JOYBUTTONUP:
+                    elif e.type == 11: # JOYBUTTONUP
                         if e.button == dev._accBtn:
                             dev._speed = 0
                         elif e.button == dev._revBtn:
                             dev._speed = 0
                         elif e.button == dev._powBtn:
                             dev._boost = 1
-                    elif e.type == JOYAXISMOTION:
+                    elif e.type == 7: # JOYAXISMOTION
                         if e.axis == dev._steeringAxis:
                             dev._dir = dev.js.get_axis(dev._steeringAxis)
                 except Exception:

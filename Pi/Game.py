@@ -4,35 +4,38 @@ from InputDevice import InputDevice
 from Zumo import Zumo
 
 def main():
-	# TODO CLI
-	pygame.init()
-	pygame.joystick.init()
-	joystick = {}
-	ser = {}
-	zumo = {}
+    # TODO CLI
+    pygame.init()
+    pygame.joystick.init()
+    joystick = {}
+    ser = {}
+    zumo = {}
 
-	# init each joystick
-	for i in range(pygame.joystick.get_count()):
-		# joystick
-		joystick[i] = InputDevice()
-		joystick[i].start(i)
-		steeringAxis, accBtn, revBtn, powBtn = getConfig(joystick[i])
-		joystick[i].configure(steeringAxis, accBtn, revBtn, powBtn)
+    # init each joystick
+    for i in range(pygame.joystick.get_count()):
+        # joystick
+        joystick[i] = InputDevice();
+        joystick[i].start(i);
+        steeringAxis = 0;
+        accBtn = 2;
+        revBtn = 3;
+        powBtn = 4;
+        #steeringAxis, accBtn, revBtn, powBtn = getConfig(joystick[i])
+        joystick[i].configure(steeringAxis, accBtn, revBtn, powBtn);
 
-		# serial/Zumo
-		port = choose_serial()
-		ser[i] = serial.Serial(port, baudrate=9600)
-		zumo[i] = Zumo(ser[i], 0.01)
-		zumo[i].beginControlThrustSteer(joystick[i].getSpeed, joystick[i].getDir)
-			# 1 thread per zumo
+        # serial/Zumo
+        port = choose_serial()
+        ser[i] = serial.Serial(port, baudrate=9600)
+        zumo[i] = Zumo(ser[i], 0.01)
+                # 1 thread per zumo
+        zumo[i].beginControlThrustSteer(joystick[i].getSpeed, joystick[i].getDir)
 
-	InputDevice.startReadThread(0.01) # 1 thread for all joysticks
+    InputDevice.startReadThread(0.01) # 1 thread for all joysticks
 
-	print("q to exit")
-	read = ""
-	while read.lower() is not "q":
-		read = raw_input('>')
-		print joystick[0].getSpeed()
+    print("q to exit")
+    read = ""
+    while read.lower() is not "q":
+        read = raw_input('>')
 
 def getConfig(dev):
     """config joystick input"""
@@ -45,7 +48,7 @@ def getConfig(dev):
                     abs(dev.js.get_axis(e.axis)) > 0.5): # if more than a half
                     steeringAxis = e.axis # configure
         except Exception as e:
-    		print(e)
+            print(e)
     print("Steering axis set as axis {}".format(steeringAxis))
 
     print("Press go")
@@ -96,4 +99,4 @@ def choose_serial():
             print("Select Port:")
 
 if __name__ == '__main__':
-	main()
+    main()

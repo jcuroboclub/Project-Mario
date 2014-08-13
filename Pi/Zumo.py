@@ -28,8 +28,7 @@ class ControlThread(Thread):
 		while not self.stopped.wait(self.tick):
 			if (self._thrustFunc is not None) & (self._steerFunc is not None):
 				self.zumo.controlThrustSteer(
-					self._thrustFunc(), self._steerFunc())
-				print self._thrustFunc() ###
+					self._thrustFunc(), self._steerFunc());
 			self.connection.write(str(chr(0)) + \
 				str(self.zumo.getLeft()) + str(self.zumo.getRight()) + \
 				str(self.zumo.getAux()) + "\n")
