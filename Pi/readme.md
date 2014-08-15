@@ -2,6 +2,32 @@
 
 The brains of the game. This module includes game logic, reading the joysticks, sending serial messages to varioud Arduino modules (RFID stations, Zumos), etc..
 
+## Required Modules/Installation
+If time allows, run "sudo apt-get update"
+
+Python 2.7:
+sudo apt-get install python
+
+PyGame:
+sudo apt-get install python-pygame
+
+PySerial:
+sudo apt-get install python-pyserial
+
+Pip:
+sudo apt-get install python-pip
+
+ColorConsole:
+sudo pip install colorconsole
+
+You also must type "export COLUMNS" and "export LINES" for colorconsole.
+
+Git:
+sudo apt-get install pip
+
+Bluetooth:
+http://blog.dawnrobotics.co.uk/2013/11/talking-to-a-bluetooth-serial-module-with-a-raspberry-pi/
+
 ## Discussion
 
 Joystick input could be implemented using the pygame API, joystick module.
