@@ -39,7 +39,8 @@ class CLI:
 		timerHeight = len(re.findall('\n', timerAscii));
 
 		# print timer
-		screen.addstr(1, 1, timerAscii, curses.color_pair(2));
+		screen.addstr(1, 1, timerAscii);
+		screen.addstr(10,10,'test',curses.color_pair(2));
 
 		# player table
 		for i in range(self._noPlayers):
@@ -84,55 +85,6 @@ class Timer:
 			t = threading.Timer(1, self._tick);
 			t.daemon = True;
 			t.start();
-
-
-class Panel:
-	"""Panel for logging, etc."""
-	def __init__(self, x, y, width, height, screen):
-		self._x = x;
-		self._y = y;
-		self._width = width;
-		self._height = height;
-		self._scr = screen;
-		self._Borderfg = 7;
-		self._Borderbg = 0;
-		self._msgs = collections.deque(maxlen=height - 2);
-		self.update();
-
-	def update(self):
-		x = self._x;
-		y = self._y;
-		width = self._width;
-		height = self._height;
-		screen = self._scr;
-
-		# msgs
-		for msg in self._msgs:
-			None #TODO
-
-		# border
-		screen.set_color(self._Borderfg, self._Borderbg);
-		for i in range(x + 1, x + width - 1):
-			screen.print_at(i, y, '-');
-			screen.print_at(i, y + height - 1, '-');
-		for i in range(y + 1, y + height - 1):
-			screen.print_at(x, i, '|');
-			screen.print_at(x + width - 1, i, '|');
-		screen.print_at(x, y, '+')
-		screen.print_at(x + width - 1, y, '+')
-		screen.print_at(x, y + height - 1, '+')
-
-	def log(self, msg, fg=7, bg=0):
-		if len(msg) > self._width - 2:
-			None#TODO
-
-		if (self._msgs.full()):
-			self._msgs.get();
-		self._msgs.put({
-			'msg': msg,
-			'fg': fg,
-			'bg': bg
-			});
 
 def main(stdscr):
 	curses.init_pair(1, curses.COLOR_YELLOW, curses.COLOR_BLACK)
