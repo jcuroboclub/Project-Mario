@@ -5,6 +5,7 @@ from pyfiglet import figlet_format
 class CLI:
 	def __init__(self, screen, noPlayers):
 		self._scr = screen;
+		curses.init_pair(1, curses.COLOR_YELLOW, curses.COLOR_BLACK)
 		screen.clear();
 		self._timertext = '0:00';
 		self._noPlayers = noPlayers
@@ -39,8 +40,7 @@ class CLI:
 		timerHeight = len(re.findall('\n', timerAscii));
 
 		# print timer
-		screen.addstr(1, 1, timerAscii);
-		screen.addstr(10,10,'test',curses.color_pair(2));
+		screen.addstr(1, 1, timerAscii, curses.color_pair(1));
 
 		# player table
 		for i in range(self._noPlayers):
@@ -72,7 +72,7 @@ class Timer:
 		self.remaining = 0;
 
 	def start(self, secs):
-		self.remaining = secs;
+		self.remaining = secs + 1;
 		self._tick();
 
 	def getTime(self):
@@ -87,15 +87,15 @@ class Timer:
 			t.start();
 
 def main(stdscr):
-	curses.init_pair(1, curses.COLOR_YELLOW, curses.COLOR_BLACK)
+	## test code
 
 	cli = CLI(stdscr, 4);
 	timer = Timer();
-	time.sleep(1);
-	cli.updateTime(datetime.timedelta(seconds=500));
+	#time.sleep(1);
+	#cli.updateTime(datetime.timedelta(seconds=500));
 	time.sleep(1);
 
-	timer.start(60*3);
+	timer.start(60 * 3);
 
 	def update():
 		cli.updateTime(timer.getTime());
