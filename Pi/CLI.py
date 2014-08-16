@@ -1,11 +1,17 @@
 import os, re, curses, threading, time, datetime
-#from colorconsole import terminal
+from collections import deque
 from pyfiglet import figlet_format
 
 class CLI:
+	"""Command Line Interface for Project Mario."""
 	def __init__(self, screen, noPlayers):
+		"""Initialise the screen."""
+		# Set up colours
 		curses.init_pair(1, curses.COLOR_YELLOW, curses.COLOR_BLACK)
+		curses.init_pair(2, curses.COLOR_GREEN, curses.COLOR_BLACK)
+		curses.init_pair(3, curses.COLOR_RED, curses.COLOR_BLACK)
 
+		# General init stuff
 		screen.clear();
 		self._scr = screen;
 		self._timertext = '0:00';
@@ -13,66 +19,101 @@ class CLI:
 		(self._scrHeight, self._scrWidth) = screen.getmaxyx();
 		self._colWidth = self._scrWidth / noPlayers;
 
-		# find heigh of timer
-		timerHeight = len(re.findall('\n', re.sub(' ' * 40 +
-			'+\n', '', figlet_format('0:00', font='doh'))));
-
 		# set up log window
 		self._logHeight = 10;
 		self._logscr = screen.derwin(self._logHeight, self._scrWidth,
 			self._scrHeight - self._logHeight, 0);
-		self._logscr.addstr(1,1,'Welcome')
+		self._log = deque(maxlen = self._logHeight - 3);
+		self._log.append({'msg': 'Welcome to Project Mario'})
+		self._log.append({
+			'msg': 'Developed by JCU Robo Club, under the JCU IEEE Student Branch.',
+			'col': 1})
+
+		# find height of timer for later
+		self._timerHeight = len(re.findall('\n', re.sub(' ' * 40 +
+			'+\n', '', figlet_format('0:00', font='doh'))));
+		self._plrHeight = (self._scrHeight - self._logHeight -
+			self._timerHeight + 1);
 
 		# set up player windows
 		self._plrscrs = [];
-		self._plrlogs = []
+		self._plrlogs = [];
 		for i in range(noPlayers):
 			self._plrscrs.append(screen.derwin(
-				self._scrHeight - self._logHeight - timerHeight + 1,
+				self._plrHeight,
 				min(self._colWidth + 1, self._scrWidth - i * self._colWidth),
-				timerHeight,
+				self._timerHeight,
 				i * self._colWidth));
+			self._plrlogs.append(deque(
+				maxlen = self._plrHeight - 3));
+			self._plrlogs[i].append('Initialising Player %i...' % (i+1));
 
 		self.printGameScreen();
 
 	def updateTime(self, t):
+		"""Update the timer value. 't' should be a timedelta object from
+		the datetime module.
+		"""
 		mins, secs = divmod(t.seconds, 60)
 		self._timertext = '%s:%02d' % (mins, secs);
 		self.printGameScreen();
 
+	def playerLog(self, playerNo, msg):
+		"""Log a message, msg, for player playerNo."""
+		self._plrlogs[playerNo-1].append(msg); # note: deque auto pops
+
+	def log(self, msg, col=False):
+		"""Log a message, msg. Optional argument col specified a colour
+		as outlined in __init__.
+		"""
+		if col:
+			self._log.append({'msg': msg, 'col': col});
+		else:
+			self._log.append({'msg': msg});
+
 	def printGameScreen(self):
+		"""Refresh the screen."""
 		# reset
 		screen = self._scr
 		logscr = self._logscr;
 		logscr.clear();
 		screen.clear();
+		# Is this actually necessary? Haven't cleared plrscrs yet
 
 		# setup timer
 		timerAscii = figlet_format(self._timertext, font='doh',
 			width=self._scrWidth, justify='center'); # recommend doh font
 		timerAscii = re.sub(' ' * 40 +
 			'+\n', '', timerAscii); # remove blank lines
-		timerHeight = len(re.findall('\n', timerAscii));
-
 		# print timer
 		screen.addstr(1, 1, timerAscii, curses.color_pair(1));
 
 		# player table
 		for i in range(self._noPlayers):
-			screen.addstr(
-				timerHeight + 2, i * self._colWidth + 2,
-				"Player {}".format(i + 1));
+			self._plrscrs[i].addstr(1, 2, "Player %i" % (i + 1),
+				curses.color_pair(2)); # title at the top
+			for j in range(len(self._plrlogs[i])): # each log entry
+				self._plrscrs[i].addstr(j + 2, 1, self._plrlogs[i][j]);
 
-		#self._logPanel.update();
+		# log
+		for i in range(len(self._log)):
+			if 'col' in self._log[i]: # if a colour is specified
+				self._logscr.addstr(i + 1, 1, self._log[i]['msg'],
+					curses.color_pair(self._log[i]['col']));
+			else:
+				self._logscr.addstr(i + 1, 1, self._log[i]['msg']);
 
-		# debug colours
+		# debug colours (just shows colours in corner, no real purpose)
 		for i in range(8):
-			screen.addstr(self._scrHeight - 9 + i, self._scrWidth - 1,
+			screen.addstr(2, self._scrWidth - 2,
 				str(i), curses.color_pair(i));
 
-		screen.move(self._scrHeight - 1, 0);
-		#screen.border('|','|','-','-','+','+','+','+');
-		#self._logscr.border();
+		# cursor indicator
+		screen.addstr(self._scrHeight - 2, 2, '>', curses.A_BLINK);
+		screen.move(self._scrHeight - 2, 3);
+
+		# Update screens
+		screen.border('|','|','-','-','+','+','+','+');
 		screen.refresh();
 		self._logscr.border('|','|','-','-','+','+','+','+');
 		self._logscr.refresh();
@@ -112,9 +153,15 @@ def main(stdscr):
 	timer = Timer();
 	#time.sleep(1);
 	#cli.updateTime(datetime.timedelta(seconds=500));
+
+	for i in range(20):
+		cli.playerLog(1, str(i));
+	for i in range(40):
+		cli.playerLog(2, str(i));
 	time.sleep(1);
 
 	timer.start(60 * 3);
+	cli.log('starting timer');
 
 	def update():
 		cli.updateTime(timer.getTime());
