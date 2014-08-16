@@ -4,21 +4,34 @@ from pyfiglet import figlet_format
 
 class CLI:
 	def __init__(self, screen, noPlayers):
-		self._scr = screen;
 		curses.init_pair(1, curses.COLOR_YELLOW, curses.COLOR_BLACK)
-		screen.clear();
-		self._timertext = '0:00';
-		self._noPlayers = noPlayers
-		self._players = [];
-		for i in range(noPlayers):
-			self._players.append(Player());
 
+		screen.clear();
+		self._scr = screen;
+		self._timertext = '0:00';
+		self._noPlayers = noPlayers;
 		(self._scrHeight, self._scrWidth) = screen.getmaxyx();
 		self._colWidth = self._scrWidth / noPlayers;
 
-		self._logHeight = 0;
-		#self._logPanel = Panel(0, self._scrHeight - self._logHeight,
-		#	self._scrWidth, self._logHeight, self._scr);
+		# find heigh of timer
+		timerHeight = len(re.findall('\n', re.sub(' ' * 40 +
+			'+\n', '', figlet_format('0:00', font='doh'))));
+
+		# set up log window
+		self._logHeight = 10;
+		self._logscr = screen.derwin(self._logHeight, self._scrWidth,
+			self._scrHeight - self._logHeight, 0);
+		self._logscr.addstr(1,1,'Welcome')
+
+		# set up player windows
+		self._plrscrs = [];
+		self._plrlogs = []
+		for i in range(noPlayers):
+			self._plrscrs.append(screen.derwin(
+				self._scrHeight - self._logHeight - timerHeight + 1,
+				min(self._colWidth + 1, self._scrWidth - i * self._colWidth),
+				timerHeight,
+				i * self._colWidth));
 
 		self.printGameScreen();
 
@@ -30,6 +43,8 @@ class CLI:
 	def printGameScreen(self):
 		# reset
 		screen = self._scr
+		logscr = self._logscr;
+		logscr.clear();
 		screen.clear();
 
 		# setup timer
@@ -44,9 +59,6 @@ class CLI:
 
 		# player table
 		for i in range(self._noPlayers):
-			for j in range(timerHeight + 2,
-				self._scrHeight - self._logHeight - 1):
-				screen.addstr(j, i * self._colWidth + 1, "|");
 			screen.addstr(
 				timerHeight + 2, i * self._colWidth + 2,
 				"Player {}".format(i + 1));
@@ -59,7 +71,14 @@ class CLI:
 				str(i), curses.color_pair(i));
 
 		screen.move(self._scrHeight - 1, 0);
+		#screen.border('|','|','-','-','+','+','+','+');
+		#self._logscr.border();
 		screen.refresh();
+		self._logscr.border('|','|','-','-','+','+','+','+');
+		self._logscr.refresh();
+		for i in range(self._noPlayers):
+			self._plrscrs[i].border('|','|','-','-','+','+','+','+');
+			self._plrscrs[i].refresh();
 
 class Player:
 	NONE = 0;

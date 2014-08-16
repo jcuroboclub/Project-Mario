@@ -31,12 +31,13 @@ sudo apt-get install pip
 Bluetooth:
 http://blog.dawnrobotics.co.uk/2013/11/talking-to-a-bluetooth-serial-module-with-a-raspberry-pi/
 
-## Discussion
+## Troubleshooting
 
-Joystick input could be implemented using the pygame API, joystick module.
-  - Docs: http://www.pygame.org/docs/ref/joystick.html
-  - e.g. Usage: http://yameb.blogspot.com.au/2013/01/gamepad-input-in-python.html
+### Bluetooth Issues
+Try:
+*$ sudo rfcomm release all*
+*$ sudo rfcomm bind all*
 
-Pygame may also be a useful GUI tool? Its only issue is that it is fiddly to install, can't just use pip.
+*$ sudo hciconfig hci0 up*
 
 Team: Ashley Gillman, Bryan Quill
