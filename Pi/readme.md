@@ -17,6 +17,9 @@ sudo apt-get install python-pyserial
 Pip:
 sudo apt-get install python-pip
 
+PyFiglet:
+sudo pip install git+https://github.com/pwaller/pyfiglet
+
 ColorConsole:
 sudo pip install colorconsole
 
