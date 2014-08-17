@@ -2,7 +2,9 @@
 	"meta": "Mac wired conf file",
 	"zumoser": [
 		"/dev/tty.usbmodem1d1141",
-		"/dev/tty.BRENDANZUMOBOT-DevB"
+		"/dev/tty.usbmodem1d1141",
+		"/dev/tty.usbmodem1d1141",
+		"/dev/tty.usbmodem1d1141"
 	],
 	"controller": {
         "steeringAxis": 0,

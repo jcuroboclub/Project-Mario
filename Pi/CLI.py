@@ -1,4 +1,4 @@
-import os, re, curses, threading, time, datetime
+import os, re, curses, threading, time, datetime, math
 from collections import deque
 from pyfiglet import figlet_format
 
@@ -47,6 +47,8 @@ class CLI:
 		# set up player windows
 		self._plrscrs = [];
 		self._plrlogs = [];
+		self._plrX = [];
+		self._plrY = [];
 		for i in range(noPlayers):
 			self._plrscrs.append(screen.derwin(
 				self._plrHeight,
@@ -55,6 +57,8 @@ class CLI:
 				i * self._colWidth));
 			self._plrlogs.append(deque(
 				maxlen = self._plrHeight - 3));
+			self._plrX.append(lambda: 0);
+			self._plrY.append(lambda: 0);
 			self._plrlogs[i].append('Initialising Player %i...' % (i+1));
 
 		self.printGameScreen();
@@ -66,6 +70,16 @@ class CLI:
 		mins, secs = divmod(t.seconds, 60)
 		self._timertext = '%s:%02d' % (mins, secs);
 		self.printGameScreen();
+
+	def playerTrackXY(self, playerNo, xFun, yFun):
+		"""Allow console tracking of input."""
+		def intVal(fun):
+			if abs(fun()) < 0.1:
+				return 0;
+			else:
+				return int(math.copysign(1, fun()));
+		self._plrX[playerNo] = lambda: intVal(xFun);
+		self._plrY[playerNo] = lambda: intVal(yFun);
 
 	def playerLog(self, playerNo, msg):
 		"""Log a message, msg, for player playerNo."""
@@ -110,10 +124,26 @@ class CLI:
 
 		# player table
 		for i in range(self._noPlayers):
+			(h, w) = self._plrscrs[i].getmaxyx();
 			self._plrscrs[i].addstr(1, 2, "Player %i" % (i + 1),
 				curses.color_pair(2)); # title at the top
 			for j in range(len(self._plrlogs[i])): # each log entry
 				self._plrscrs[i].addstr(j + 2, 1, self._plrlogs[i][j]);
+
+			# draw steering in top right
+			if (self._plrX[i]() == 0) and (self._plrY[i]() == 0):
+				c = '';
+			elif self._plrX[i]() == 0:
+				c = '|';
+			elif self._plrY[i]() == 0:
+				c = '-';
+			elif self._plrX[i]() == self._plrY[i]():
+				c = '/';
+			else:
+				c = '\\';
+			self._plrscrs[i].addstr(2, w-3, 'X', curses.color_pair(1));
+			self._plrscrs[i].addstr(2 - self._plrY[i](),
+				w-3 + self._plrX[i](), c);
 
 		# log
 		for i in range(len(self._log)):

@@ -68,7 +68,7 @@ class Game:
 		# update timer thread
 		def update():
 			cli.updateTime(Game.timer.getTime());
-			t = threading.Timer(1, update);
+			t = threading.Timer(0.1, update);
 			t.daemon = True;
 			t.start();
 		update(); # start
@@ -95,7 +95,10 @@ class Game:
 			ser[i] = serial.Serial(port, baudrate=9600);
 			zumo[i] = Zumo(ser[i], 0.01);
 			# 1 thread per zumo
-			zumo[i].beginControlThrustSteer(joystick[i].getSpeed, joystick[i].getDir)
+			zumo[i].beginControlThrustSteer(joystick[i].getSpeed,
+				joystick[i].getDir)
+			cli.playerTrackXY(i, joystick[i].getDir,
+				joystick[i].getSpeed)
 			playprint('initialised!')
 
 		InputDevice.startReadThread(0.01); # 1 thread for all joysticks
