@@ -60,9 +60,12 @@ class InputDevice:
 				except serial.SerialException:
 					pass
 			return result;
-
-		elif sys.platform.startswith('linux'):
-			return glob.glob('/dev/rf*');
+        elif sys.platform.startswith('linux'):
+            types = ('/dev/rf*', '/dev/serial/by-id/*')
+            ports = []
+            for type in types:
+                ports.extend(glob.glob(type))
+            return ports
 
 		elif sys.platform.startswith('darwin'):
 			return glob.glob('/dev/tty.*');
