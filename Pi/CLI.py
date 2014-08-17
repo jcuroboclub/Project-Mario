@@ -3,9 +3,15 @@ from collections import deque
 from pyfiglet import figlet_format
 
 class CLI:
+	init = False;
+	running = False;
 	"""Command Line Interface for Project Mario."""
 	def __init__(self, screen, noPlayers):
 		"""Initialise the screen."""
+
+		self.init = True; # initialising
+		self.running = True;
+
 		# Set up colours
 		curses.init_pair(1, curses.COLOR_YELLOW, curses.COLOR_BLACK)
 		curses.init_pair(2, curses.COLOR_GREEN, curses.COLOR_BLACK)
@@ -61,6 +67,7 @@ class CLI:
 	def playerLog(self, playerNo, msg):
 		"""Log a message, msg, for player playerNo."""
 		self._plrlogs[playerNo-1].append(msg); # note: deque auto pops
+		self.printGameScreen();
 
 	def log(self, msg, col=False):
 		"""Log a message, msg. Optional argument col specified a colour
@@ -70,6 +77,16 @@ class CLI:
 			self._log.append({'msg': msg, 'col': col});
 		else:
 			self._log.append({'msg': msg});
+		self.printGameScreen();
+
+	def setEventHandler(self, func, *args):
+		"""Function to call when user enters input.
+		Format: func(char, *args)
+		i.e. first argument must be the char entered, subsequent
+		arguments may be specified.
+		"""
+		self._handleFunc = func;
+		self._handleArgs = args;
 
 	def printGameScreen(self):
 		"""Refresh the screen."""
@@ -109,7 +126,8 @@ class CLI:
 				str(i), curses.color_pair(i));
 
 		# cursor indicator
-		screen.addstr(self._scrHeight - 2, 2, '>', curses.A_BLINK);
+		screen.addstr(self._scrHeight - 2, 2, '(S)tart, (Q)uit ');
+		screen.addstr('>', curses.A_BLINK);
 		screen.move(self._scrHeight - 2, 3);
 
 		# Update screens
@@ -121,24 +139,38 @@ class CLI:
 			self._plrscrs[i].border('|','|','-','-','+','+','+','+');
 			self._plrscrs[i].refresh();
 
-class Player:
-	NONE = 0;
-	MUSHROOM = 1;
-	def __init__(self):
-		self.powerup = 0;
+	def inputloop(self):
+		"""Main program loop."""
+		self.printGameScreen();
+		self._scr.nodelay(0); # blocking mode
+		c = self._scr.getch();
+		if self._handleFunc is not None:
+			self._handleFunc(self, c, *self._handleArgs)
 
-class Timer:
+	def end(self):
+		"""Close the interface."""
+		self.running = False;
+
+class CountdownTimer:
+	"""Simple countdown timer module.
+	Probably should go in another file.
+	"""
 	def __init__(self):
 		self.remaining = 0;
 
 	def start(self, secs):
+		"""Start countdown, of length secs seconds."""
 		self.remaining = secs + 1;
 		self._tick();
 
 	def getTime(self):
+		"""Get remaining time, as a deltatime object (datetime
+		module).
+		"""
 		return datetime.timedelta(seconds = self.remaining);
 
 	def _tick(self):
+		"""Calls itself every second until remaining <= 0."""
 		if self.remaining > 0:
 			print(self.remaining)
 			self.remaining -= 1;
@@ -146,11 +178,23 @@ class Timer:
 			t.daemon = True;
 			t.start();
 
+def dummyHandler(win, c):
+	"""Example event handler."""
+	if 0 < c < 256:
+		c = chr(c);
+		if c in 'Ss': # Start
+			win.log('Starting');
+		if c in 'Qq': # Start
+			win.log('Quitting, Goodbye', 3);
+			time.sleep(1);
+			win.end();
+
 def main(stdscr):
 	## test code
 
 	cli = CLI(stdscr, 4);
-	timer = Timer();
+	cli.setEventHandler(dummyHandler);
+	timer = CountdownTimer();
 	#time.sleep(1);
 	#cli.updateTime(datetime.timedelta(seconds=500));
 
@@ -171,8 +215,8 @@ def main(stdscr):
 
 	update();
 
-	while True:
-		None;
+	while cli.running:
+		cli.inputloop();
 
 if __name__ == '__main__':
 	curses.wrapper(main);
