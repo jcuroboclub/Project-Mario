@@ -127,57 +127,6 @@ class Game:
 				time.sleep(1);
 				win.end();
 
-	@staticmethod
-	def getConfig(dev):
-		"""config joystick input"""
-		print("Wiggle steering")
-		steeringAxis = -1
-		while steeringAxis < 0: # wait for config
-			try:
-				for e in pygame.event.get():
-					if (e.type == JOYAXISMOTION) & (
-						abs(dev.js.get_axis(e.axis)) > 0.5):
-						# if more than a half
-						steeringAxis = e.axis # configure
-			except Exception as e:
-				print(e)
-		print("Steering axis set as axis {}".format(steeringAxis))
-
-		print("Press go")
-		accBtn = -1
-		while accBtn < 0: # wait for config
-			try:
-				for e in pygame.event.get():
-					if (e.type == JOYBUTTONDOWN):
-						accBtn = e.button # configure
-			except Exception:
-				None
-		print("Acceleration button set as button {}".format(accBtn))
-
-		print("Press reverse")
-		revBtn = -1
-		while revBtn < 0: # wait for config
-			try:
-				for e in pygame.event.get():
-					if (e.type == JOYBUTTONDOWN):
-						revBtn = e.button # configure
-			except Exception:
-				None
-		print("Reverse button set as button {}".format(revBtn))
-
-		print("Press powerup activate")
-		powBtn = -1
-		while powBtn < 0: # wait for config
-			try:
-				for e in pygame.event.get():
-					if (e.type == JOYBUTTONDOWN):
-						powBtn = e.button # configure
-			except Exception:
-				None
-		print("Powerup button set as button {}".format(powBtn))
-
-		return steeringAxis, accBtn, revBtn, powBtn
-
 def print_serial(stream):
 	stream("Detected available serial ports:")
 	ports = InputDevice.serialPorts()
