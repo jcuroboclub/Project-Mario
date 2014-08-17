@@ -1,0 +1,13 @@
+{
+	"meta": "Mac conf file",
+	"zumoser": [
+		"/dev/tty.PillyDude-DevB",
+		"/dev/tty.BRENDANZUMOBOT-DevB"
+	],
+	"controller": {
+        "steeringAxis": 0,
+        "accBtn": [2, 14],
+        "revBtn": [3, 15],
+        "powBtn": [4, 10]
+	}
+}

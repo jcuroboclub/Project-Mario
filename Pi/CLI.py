@@ -5,7 +5,10 @@ from pyfiglet import figlet_format
 class CLI:
 	init = False;
 	running = False;
-	"""Command Line Interface for Project Mario."""
+	instructions = '';
+	"""Command Line Interface for Project Mario.
+	The V in MVC.
+	"""
 	def __init__(self, screen, noPlayers):
 		"""Initialise the screen."""
 
@@ -126,8 +129,8 @@ class CLI:
 				str(i), curses.color_pair(i));
 
 		# cursor indicator
-		screen.addstr(self._scrHeight - 2, 2, '(S)tart, (Q)uit ');
-		screen.addstr('>', curses.A_BLINK);
+		screen.addstr(self._scrHeight - 2, 2, self.instructions);
+		screen.addstr(' >', curses.A_BLINK);
 		screen.move(self._scrHeight - 2, 3);
 
 		# Update screens
@@ -140,7 +143,7 @@ class CLI:
 			self._plrscrs[i].refresh();
 
 	def inputloop(self):
-		"""Main program loop."""
+		"""Main program loop. Updates screen, gets input (blocking)."""
 		self.printGameScreen();
 		self._scr.nodelay(0); # blocking mode
 		c = self._scr.getch();
@@ -192,12 +195,15 @@ def dummyHandler(win, c):
 def main(stdscr):
 	## test code
 
+	# setup
 	cli = CLI(stdscr, 4);
 	cli.setEventHandler(dummyHandler);
+	cli.instructions = '(S)tart, (Q)uit ';
 	timer = CountdownTimer();
 	#time.sleep(1);
 	#cli.updateTime(datetime.timedelta(seconds=500));
 
+	# Throw some text out just for demo
 	for i in range(20):
 		cli.playerLog(1, str(i));
 	for i in range(40):
@@ -207,13 +213,13 @@ def main(stdscr):
 	timer.start(60 * 3);
 	cli.log('starting timer');
 
+	# update timer thread
 	def update():
 		cli.updateTime(timer.getTime());
 		t = threading.Timer(1, update);
 		t.daemon = True;
 		t.start();
-
-	update();
+	update(); # start
 
 	while cli.running:
 		cli.inputloop();
