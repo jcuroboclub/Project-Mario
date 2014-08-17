@@ -13,7 +13,11 @@ class Game:
 
 	timer = CountdownTimer();
 	cli = None;
-	GAMETIME = 60 * 3; # seconds
+	GAMETIME = 10#60 * 3; # seconds
+
+	joystick = [];
+	ser = [];
+	zumo = [];
 
 	# Setup stuff
 	setupState = 0;
@@ -73,33 +77,41 @@ class Game:
 			t.start();
 		update(); # start
 
-		joystick = {};
-		ser = {};
-		zumo = {};
 		# init each joystick
 		for i in range(noPlayers):
 			# joystick
 			def playprint(str):
 				cli.playerLog(i, str);
-			joystick[i] = InputDevice(playprint);
-			joystick[i].start(i);
+			try:
+				Game.joystick[i] = InputDevice(playprint);
+			except IndexError:
+				Game.joystick.append(InputDevice(playprint));
+			Game.joystick[i].start(i);
 			steeringAxis = Game.conf["controller"]["steeringAxis"];
 			accBtn = Game.conf["controller"]["accBtn"];
 			revBtn = Game.conf["controller"]["revBtn"];
 			powBtn = Game.conf["controller"]["powBtn"];
-			joystick[i].configure(steeringAxis, accBtn, revBtn,
+			Game.joystick[i].configure(steeringAxis, accBtn, revBtn,
 				powBtn);
 
 			# serial/Zumo
 			try:
 				port = Game.conf["zumoser"][i];
-				ser[i] = serial.Serial(port, baudrate=9600);
-				zumo[i] = Zumo(ser[i], 0.01);
+				try:
+					Game.ser[i] = serial.Serial(port, baudrate=9600);
+				except IndexError:
+					Game.ser.append(serial.Serial(port,
+						baudrate=9600));
+				try:
+					Game.zumo[i] = Zumo(Game.ser[i], 0.01);
+				except IndexError:
+					Game.zumo.append(Zumo(Game.ser[i], 0.01));
 				# 1 thread per zumo
-				zumo[i].beginControlThrustSteer(joystick[i].getSpeed,
-					joystick[i].getDir)
-				cli.playerTrackXY(i, joystick[i].getDir,
-					joystick[i].getSpeed)
+				Game.zumo[i].beginControlThrustSteer(
+					Game.joystick[i].getSpeed,
+					Game.joystick[i].getDir)
+				cli.playerTrackXY(i, Game.joystick[i].getDir,
+					Game.joystick[i].getSpeed)
 				playprint('Initialised on %s' % port)
 			except OSError:
 				playprint('Could not initialise.')
@@ -120,12 +132,24 @@ class Game:
 			if c in 'Ss': # Start
 				win.log('Starting');
 				Game.timer.start(Game.GAMETIME);
+				Game.timer.onStop(Game.stopRace);
+				Game.startRace()
 			if c in 'Ll': # List Serial
 				print_serial(Game.cli.log);
 			if c in 'Qq': # Start
 				win.log('Quitting, Goodbye', 3);
 				time.sleep(1);
 				win.end();
+
+	@staticmethod
+	def startRace():
+		for z in Game.zumo:
+			z.go();
+
+	@staticmethod
+	def stopRace():
+		for z in Game.zumo:
+			z.stop();
 
 	@staticmethod
 	def getConfig(dev):

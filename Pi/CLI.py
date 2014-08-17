@@ -202,6 +202,12 @@ class CountdownTimer:
 		"""
 		return datetime.timedelta(seconds = self.remaining);
 
+	def onStop(self, func):
+		"""Get remaining time, as a deltatime object (datetime
+		module).
+		"""
+		self._onstop = func;
+
 	def _tick(self):
 		"""Calls itself every second until remaining <= 0."""
 		if self.remaining > 0:
@@ -210,6 +216,11 @@ class CountdownTimer:
 			t = threading.Timer(1, self._tick);
 			t.daemon = True;
 			t.start();
+		else:
+			try:
+				self._onstop();
+			except:
+				pass;
 
 def dummyHandler(win, c):
 	"""Example event handler."""
