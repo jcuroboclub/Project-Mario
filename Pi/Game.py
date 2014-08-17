@@ -13,7 +13,7 @@ class Game:
 
 	timer = CountdownTimer();
 	cli = None;
-	GAMETIME = 10#60 * 3; # seconds
+	GAMETIME = 60 * 3; # seconds
 
 	joystick = [];
 	ser = [];
@@ -140,6 +140,16 @@ class Game:
 				win.log('Quitting, Goodbye', 3);
 				time.sleep(1);
 				win.end();
+
+	@staticmethod
+	def startRace():
+		for z in Game.zumo:
+			z.go();
+
+	@staticmethod
+	def stopRace():
+		for z in Game.zumo:
+			z.stop();
 
 def print_serial(stream):
 	stream("Detected available serial ports:")
