@@ -32,7 +32,8 @@ class Game:
 		elif Game.setupState == 0:
 			data = open("%s/%s.json" % (Game.__location__, c));
 			Game.conf = json.load(data);
-			Game.cli.log('loaded %s/%s.json' % (Game.__location__, c));
+			Game.cli.log('loaded %s/%s.json - %s' % (
+				Game.__location__, c, Game.conf["meta"]));
 		Game.setupState += 1;
 
 	@staticmethod
@@ -57,13 +58,12 @@ class Game:
 		# run through setup steps
 		Game.setupState = 0;
 		while Game.setupState < len(Game.setupStep): # still setting up
-			cli.log('%i of %i' % (Game.setupState, len(Game.setupStep)));
+			cli.log('Setup step %i of %i' % (Game.setupState + 1,
+				len(Game.setupStep)));
 			cli.instructions = Game.setupStep[Game.setupState]["inst"];
 			cli.inputloop();
 			time.sleep(0.2); # throttle
-		cli.instructions = '(S)tart or (Q)uit'
-		cli.log('thanks');
-		cli.log(str(Game.conf));
+		cli.instructions = '(S)tart, (L)ist Serial or (Q)uit'
 
 		# update timer thread
 		def update():
@@ -72,7 +72,6 @@ class Game:
 			t.daemon = True;
 			t.start();
 		update(); # start
-		print_serial(cli.log);
 
 		joystick = {};
 		ser = {};
@@ -87,14 +86,15 @@ class Game:
 			revBtn = Game.conf["controller"]["revBtn"];
 			powBtn = Game.conf["controller"]["powBtn"];
 			#steeringAxis, accBtn, revBtn, powBtn = getConfig(joystick[i])
-			joystick[i].configure(steeringAxis, accBtn, revBtn, powBtn);
+			joystick[i].configure(steeringAxis, accBtn, revBtn,
+				powBtn);
 
 			# serial/Zumo
-			#print_serial();
-			#ser[i] = serial.Serial(port, baudrate=9600);
-			#zumo[i] = Zumo(ser[i], 0.01);
-					# 1 thread per zumo
-			#zumo[i].beginControlThrustSteer(joystick[i].getSpeed, joystick[i].getDir)
+			port = Game.conf["zumoser"][i];
+			ser[i] = serial.Serial(port, baudrate=9600);
+			zumo[i] = Zumo(ser[i], 0.01);
+			# 1 thread per zumo
+			zumo[i].beginControlThrustSteer(joystick[i].getSpeed, joystick[i].getDir)
 
 		InputDevice.startReadThread(0.01); # 1 thread for all joysticks
 
@@ -106,12 +106,14 @@ class Game:
 		"""Example event handler."""
 		if 0 < c < 256:
 			c = chr(c);
-			Game.cli.log(c);
-			if Game.setupState < len(Game.setupStep): # still setting up
+			Game.cli.log('%s > %s' % (Game.cli.instructions, c), 2);
+			if Game.setupState < len(Game.setupStep): # setting up
 				Game.setup(c)
 			if c in 'Ss': # Start
 				win.log('Starting');
-				Game.timer.start(Game.GAMETIME)
+				Game.timer.start(Game.GAMETIME);
+			if c in 'Ll': # List Serial
+				print_serial(Game.cli.log);
 			if c in 'Qq': # Start
 				win.log('Quitting, Goodbye', 3);
 				time.sleep(1);
@@ -126,7 +128,8 @@ class Game:
 			try:
 				for e in pygame.event.get():
 					if (e.type == JOYAXISMOTION) & (
-						abs(dev.js.get_axis(e.axis)) > 0.5): # if more than a half
+						abs(dev.js.get_axis(e.axis)) > 0.5):
+						# if more than a half
 						steeringAxis = e.axis # configure
 			except Exception as e:
 				print(e)

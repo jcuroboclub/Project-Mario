@@ -29,7 +29,7 @@ class CLI:
 		self._colWidth = self._scrWidth / noPlayers;
 
 		# set up log window
-		self._logHeight = 10;
+		self._logHeight = 20;
 		self._logscr = screen.derwin(self._logHeight, self._scrWidth,
 			self._scrHeight - self._logHeight, 0);
 		self._log = deque(maxlen = self._logHeight - 3);

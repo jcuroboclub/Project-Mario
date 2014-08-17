@@ -21,6 +21,15 @@ class InputDevice:
 
     def configure(self, steeringAxis, accBtn, revBtn, powBtn):
         """Configure axis and button IDs for the current joystick."""
+        # get into list if not already
+        if not hasattr(steeringAxis, '__iter__'):
+            steeringAxis = [steeringAxis];
+        if not hasattr(accBtn, '__iter__'):
+            accBtn = [accBtn];
+        if not hasattr(revBtn, '__iter__'):
+            revBtn = [revBtn];
+        if not hasattr(powBtn, '__iter__'):
+            powBtn = [powBtn];
         self._steeringAxis = steeringAxis
         self._accBtn = accBtn
         self._revBtn = revBtn
@@ -66,21 +75,21 @@ class InputDevice:
                     dev = InputDevice.devs[id]
                     if e.type == 10: # JOYBUTTONDOWN
                         #print("Player {0} Pressed {1}".format(id, e.button))
-                        if e.button == dev._accBtn:
+                        if e.button in dev._accBtn:
                             dev._speed = 1
-                        elif e.button == dev._revBtn:
+                        elif e.button in dev._revBtn:
                             dev._speed = -1
-                        elif e.button == dev._powBtn:
+                        elif e.button in dev._powBtn:
                             dev._boost = 2
                     elif e.type == 11: # JOYBUTTONUP
-                        if e.button == dev._accBtn:
+                        if e.button in dev._accBtn:
                             dev._speed = 0
-                        elif e.button == dev._revBtn:
+                        elif e.button in dev._revBtn:
                             dev._speed = 0
-                        elif e.button == dev._powBtn:
+                        elif e.button in dev._powBtn:
                             dev._boost = 1
                     elif e.type == 7: # JOYAXISMOTION
-                        if e.axis == dev._steeringAxis:
+                        if e.axis in dev._steeringAxis:
                             dev._dir = dev.js.get_axis(dev._steeringAxis)
                 except Exception:
                     None
