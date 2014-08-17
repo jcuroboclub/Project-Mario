@@ -63,7 +63,7 @@ class Game:
 			cli.instructions = Game.setupStep[Game.setupState]["inst"];
 			cli.inputloop();
 			time.sleep(0.2); # throttle
-		cli.instructions = '(S)tart, (L)ist Serial or (Q)uit'
+		cli.instructions = '(S)tart, (L)ist Serial or (Q)uit';
 
 		# update timer thread
 		def update():
@@ -79,13 +79,14 @@ class Game:
 		# init each joystick
 		for i in range(noPlayers):
 			# joystick
-			joystick[i] = InputDevice();
+			def playprint(str):
+				cli.playerLog(i, str);
+			joystick[i] = InputDevice(playprint);
 			joystick[i].start(i);
 			steeringAxis = Game.conf["controller"]["steeringAxis"];
 			accBtn = Game.conf["controller"]["accBtn"];
 			revBtn = Game.conf["controller"]["revBtn"];
 			powBtn = Game.conf["controller"]["powBtn"];
-			#steeringAxis, accBtn, revBtn, powBtn = getConfig(joystick[i])
 			joystick[i].configure(steeringAxis, accBtn, revBtn,
 				powBtn);
 
@@ -95,6 +96,7 @@ class Game:
 			zumo[i] = Zumo(ser[i], 0.01);
 			# 1 thread per zumo
 			zumo[i].beginControlThrustSteer(joystick[i].getSpeed, joystick[i].getDir)
+			playprint('initialised!')
 
 		InputDevice.startReadThread(0.01); # 1 thread for all joysticks
 
