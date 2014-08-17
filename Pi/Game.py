@@ -91,15 +91,18 @@ class Game:
 				powBtn);
 
 			# serial/Zumo
-			port = Game.conf["zumoser"][i];
-			ser[i] = serial.Serial(port, baudrate=9600);
-			zumo[i] = Zumo(ser[i], 0.01);
-			# 1 thread per zumo
-			zumo[i].beginControlThrustSteer(joystick[i].getSpeed,
-				joystick[i].getDir)
-			cli.playerTrackXY(i, joystick[i].getDir,
-				joystick[i].getSpeed)
-			playprint('initialised!')
+			try:
+				port = Game.conf["zumoser"][i];
+				ser[i] = serial.Serial(port, baudrate=9600);
+				zumo[i] = Zumo(ser[i], 0.01);
+				# 1 thread per zumo
+				zumo[i].beginControlThrustSteer(joystick[i].getSpeed,
+					joystick[i].getDir)
+				cli.playerTrackXY(i, joystick[i].getDir,
+					joystick[i].getSpeed)
+				playprint('Initialised on %s' % port)
+			except OSError:
+				playprint('Could not initialise.')
 
 		InputDevice.startReadThread(0.01); # 1 thread for all joysticks
 
