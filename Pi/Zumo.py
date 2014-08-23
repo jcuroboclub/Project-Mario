@@ -22,16 +22,19 @@ class ControlThread(Thread):
 		self._thrustFunc = None
 		self._steerFunc = None
 
-	def setControl(self, thrustFunc, steerFunc):
+	def setControl(self, thrustFunc, steerFunc, boostFunc):
 		self._thrustFunc = thrustFunc
 		self._steerFunc = steerFunc
+		self._boostFunc = boostFunc
 
 	def run(self):
 		while not self.stopped.wait(self.tick):
 			if (self._thrustFunc is not None) and (
-				self._steerFunc is not None):
+				self._steerFunc is not None) and (
+				self._boostFunc is not None):
 				self.zumo.controlThrustSteer(
-					self._thrustFunc(), self._steerFunc());
+					self._thrustFunc(), self._steerFunc(),
+					self._boostFunc());
 			self.connection.write(str(chr(0)) + \
 				str(self.zumo.getLeft()) + \
 				str(self.zumo.getRight()) + \
@@ -135,13 +138,16 @@ class Zumo:
 		self._controlThread = ControlThread(self, connection, time);
 		self._controlThread.daemon = True;
 		self._canDrive = False; # initially stopped
+		self._boost = False;
 
-	def beginControlThrustSteer(self, thrustFunc, steerFunc):
+	def beginControlThrustSteer(self, thrustFunc, steerFunc,
+		boostFunc):
 		"""Begins a thread for controlling the Zumo. Uses thrustFunc
 		to get the thrust value and steerFunc to get the steering
 		value.
 		"""
-		self._controlThread.setControl(thrustFunc, steerFunc);
+		self._controlThread.setControl(thrustFunc, steerFunc,
+			boostFunc);
 		self._controlThread.start();
 
 	def beginControl(self):
@@ -152,17 +158,24 @@ class Zumo:
 		"""Begins a thread for controlling the Zumo."""
 		self._controlThread.stop();
 
-	def controlThrustSteer(self, thrust, steering):
+	def controlThrustSteer(self, thrust, steering, boost):
 		"""Provide updated control information from joystick.
 		Thrust and Steering expected domain: [-1,1]
 		-1: left/rev
 		1: right/fwd
 		"""
+		self._boost = boost;
 		left, right = self._controlSteering(thrust,
 			steering * Zumo.TURN_ANGLE);
 		self._left, self._right = self._coerceSteering(left, right);
 
 	def _controlSteering(self, thrust, theta):
+		#print(str(self._boost))
+		if self._boost:
+			thrust = thrust * 1.5;
+		return self._normalSteering(thrust, theta);
+
+	def _normalSteering(self, thrust, theta):
 		"""assumes theta in degrees and thrust = -1 (100% rev) to 1
 		(100% fwd)
 		returns a tuple: (left_thrust [-1,1], right_thrust [-1,1])

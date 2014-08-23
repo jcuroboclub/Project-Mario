@@ -8,11 +8,12 @@ class InputDevice:
 	js = None;
 
 	def __init__(self, logfun = lambda s: s):
-		pygame.init();
+		#pygame.init();
 		pygame.joystick.init();
 		self._clock = pygame.time.Clock();
 		self._speed = 0;
 		self._dir = 0;
+		self._boost = False;
 		self._logfun = logfun;
 
 	def start(self, id):
@@ -44,6 +45,10 @@ class InputDevice:
 	def getDir(self):
 		"""Get turning value"""
 		return self._dir;
+
+	def getPow(self):
+		"""Has player pressed boost?"""
+		return self._boost;
 
 	@staticmethod
 	def serialPorts():
@@ -85,14 +90,14 @@ class InputDevice:
 						elif e.button in dev._revBtn:
 							dev._speed = -1;
 						elif e.button in dev._powBtn:
-							dev._boost = 2;
+							dev._boost = True;
 					elif e.type == 11: # JOYBUTTONUP
 						if e.button in dev._accBtn:
 							dev._speed = 0;
 						elif e.button in dev._revBtn:
 							dev._speed = 0;
 						elif e.button in dev._powBtn:
-							dev._boost = 1;
+							dev._boost = False;
 					elif e.type == 7: # JOYAXISMOTION
 						if e.axis in dev._steeringAxis:
 							dev._dir = dev.js.get_axis(e.axis);

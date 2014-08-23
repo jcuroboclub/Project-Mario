@@ -36,8 +36,10 @@ void loop() {
     char ignore[len];
     if (len > 8) { altSerial.readBytes(ignore, len-8); } // flush input
     altSerial.readBytesUntil(0x0, ignore, len);
+    Serial.write(ignore);
     char buf[4];
     altSerial.readBytesUntil('\r', buf, 4);
+    serial.write(buf);
     Serial.print("Recieved ");
     Serial.print(len);
     Serial.print(" chars. ");

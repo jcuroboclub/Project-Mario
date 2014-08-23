@@ -84,7 +84,7 @@ class CLI:
 	def playerLog(self, playerNo, msg):
 		"""Log a message, msg, for player playerNo."""
 		self._plrlogs[playerNo-1].append(msg); # note: deque auto pops
-		self.printGameScreen();
+		#self.printGameScreen();
 
 	def log(self, msg, col=False):
 		"""Log a message, msg. Optional argument col specified a colour
@@ -94,7 +94,7 @@ class CLI:
 			self._log.append({'msg': msg, 'col': col});
 		else:
 			self._log.append({'msg': msg});
-		self.printGameScreen();
+		#self.printGameScreen();
 
 	def setEventHandler(self, func, *args):
 		"""Function to call when user enters input.
@@ -184,6 +184,9 @@ class CLI:
 		"""Close the interface."""
 		self.running = False;
 
+	def write(self, str):
+		self.log(str);
+
 class CountdownTimer:
 	"""Simple countdown timer module.
 	Probably should go in another file.
@@ -211,7 +214,7 @@ class CountdownTimer:
 	def _tick(self):
 		"""Calls itself every second until remaining <= 0."""
 		if self.remaining > 0:
-			print(self.remaining)
+			#print(self.remaining)
 			self.remaining -= 1;
 			t = threading.Timer(1, self._tick);
 			t.daemon = True;

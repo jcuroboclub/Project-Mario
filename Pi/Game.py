@@ -1,4 +1,4 @@
-import serial, pygame, curses, threading, time, json, os
+import serial, pygame, curses, threading, time, json, os, sys
 from pygame.locals import *
 from InputDevice import InputDevice
 from Zumo import Zumo
@@ -16,6 +16,7 @@ class Game:
 	GAMETIME = 60 * 3; # seconds
 
 	joystick = [];
+	player = [];
 	ser = [];
 	zumo = [];
 
@@ -32,19 +33,22 @@ class Game:
 		if not any(c in s for s in Game.setupStep[Game.setupState]["opts"]):
 			Game.cli.log('invalid select from: %s' % 
 				Game.setupStep[Game.setupState]["opts"])
+			Game.cli.printGameScreen();
 			return;
 		elif Game.setupState == 0:
 			data = open("%s/%s.json" % (Game.__location__, c));
 			Game.conf = json.load(data);
 			Game.cli.log('loaded %s/%s.json - %s' % (
 				Game.__location__, c, Game.conf["meta"]));
+			Game.cli.printGameScreen();
 		Game.setupState += 1;
 
 	@staticmethod
 	def main(stdscr):
 		"""The Main Game!!!"""
 		# init pygame
-		pygame.init();
+		#pygame.init();
+		pygame.display.init()
 		pygame.joystick.init();
 
 		noPlayers = pygame.joystick.get_count();
@@ -56,6 +60,7 @@ class Game:
 
 		# init CLI
 		cli = CLI(stdscr, noPlayers);
+		sys.stdout = cli;
 		Game.cli = cli;
 		cli.setEventHandler(Game.inputHandler);
 
@@ -72,12 +77,13 @@ class Game:
 		# update timer thread
 		def update():
 			cli.updateTime(Game.timer.getTime());
+			Game.cli.printGameScreen();
 			t = threading.Timer(0.1, update);
 			t.daemon = True;
 			t.start();
 		update(); # start
 
-		# init each joystick
+		# init each player
 		for i in range(noPlayers):
 			# joystick
 			def playprint(str):
@@ -94,6 +100,12 @@ class Game:
 			Game.joystick[i].configure(steeringAxis, accBtn, revBtn,
 				powBtn);
 
+			# player
+			try:
+				Game.player[i] = Player();
+			except IndexError:
+				Game.player.append(Player());
+
 			# serial/Zumo
 			try:
 				port = Game.conf["zumoser"][i];
@@ -109,7 +121,8 @@ class Game:
 				# 1 thread per zumo
 				Game.zumo[i].beginControlThrustSteer(
 					Game.joystick[i].getSpeed,
-					Game.joystick[i].getDir)
+					Game.joystick[i].getDir,
+					Game.player[i].getBoost)
 				cli.playerTrackXY(i, Game.joystick[i].getDir,
 					Game.joystick[i].getSpeed)
 				playprint('Initialised on %s' % port)
@@ -129,17 +142,23 @@ class Game:
 			Game.cli.log('%s > %s' % (Game.cli.instructions, c), 2);
 			if Game.setupState < len(Game.setupStep): # setting up
 				Game.setup(c)
-			if c in 'Ss': # Start
+			elif c in 'Ss': # Start
 				win.log('Starting');
 				Game.timer.start(Game.GAMETIME);
 				Game.timer.onStop(Game.stopRace);
 				Game.startRace()
+
+			# regardless of state, allow the following
 			if c in 'Ll': # List Serial
 				print_serial(Game.cli.log);
 			if c in 'Qq': # Start
 				win.log('Quitting, Goodbye', 3);
 				time.sleep(1);
 				win.end();
+
+			#REMOVE THIS
+			if c in 'Zz':
+				Game.player[1].useBoost();
 
 	@staticmethod
 	def startRace():
@@ -164,5 +183,23 @@ def print_serial(stream):
 		except ValueError:
 			print("Select Port:")"""
 
+class Player:
+	def __init__(self):
+		self.powerup = False
+
+	def useBoost(self):
+		self._boost = True;
+		t = threading.Timer(1, self.endBoost);
+		t.daemon = True;
+		t.start();
+
+	def endBoost(self):
+		self._boost = False;
+
+	def getBoost(self):
+		return self._boost;
+
 if __name__ == '__main__':
 	curses.wrapper(Game.main);
+
+pygame.quit();
