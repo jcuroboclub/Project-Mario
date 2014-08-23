@@ -19,6 +19,8 @@ class Game:
 	ser = [];
 	zumo = [];
 
+	colours = [Zumo.RED, Zumo.BLUE, Zumo.GREEN, Zumo.YELLOW];
+
 	# Setup stuff
 	setupState = 0;
 	setupStep = [{
@@ -112,6 +114,7 @@ class Game:
 					Game.joystick[i].getDir)
 				cli.playerTrackXY(i, Game.joystick[i].getDir,
 					Game.joystick[i].getSpeed)
+				Game.zumo[i].setLED(Game.colours[i]);
 				playprint('Initialised on %s' % port)
 			except OSError:
 				playprint('Could not initialise.')
@@ -145,11 +148,13 @@ class Game:
 	def startRace():
 		for z in Game.zumo:
 			z.go();
+			z.playSound(Zumo.POWERUP);
 
 	@staticmethod
 	def stopRace():
 		for z in Game.zumo:
 			z.stop();
+			z.playSound(Zumo.POWERDOWN);
 
 def print_serial(stream):
 	stream("Detected available serial ports:")
