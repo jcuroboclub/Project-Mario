@@ -31,6 +31,7 @@ void loop() {
     // 2nd byte: rspeed 0=full rev, 64=halt, 127=full fwd
     left_speed = (buf[0]-64) * 25 / 4; // 400:64 maxSpeed:0.5byteRange
     right_speed = (buf[1]-64) * 25 / 4;
+   
   } else {
     silenceCount++;
     if (silenceCount>10000) {
