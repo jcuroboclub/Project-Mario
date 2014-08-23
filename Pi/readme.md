@@ -5,23 +5,11 @@ The brains of the game. This module includes game logic, reading the joysticks, 
 ## Required Modules/Installation
 If time allows, run "sudo apt-get update"
 
-Python 2.7:
-sudo apt-get install python
-
-PyGame:
-sudo apt-get install python-pygame
-
-PySerial:
-sudo apt-get install python-pyserial
-
-Pip:
-sudo apt-get install python-pip
+Python 2.7, PyGame, PySerial, Pip:
+sudo apt-get install python python-pygame python-serial python-pip
 
 PyFiglet:
 sudo pip install git+https://github.com/pwaller/pyfiglet
-
-ColorConsole:
-sudo pip install colorconsole
 
 You also must type "export COLUMNS" and "export LINES" for colorconsole.
 
