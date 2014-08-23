@@ -2,6 +2,26 @@ import unittest, time
 from threading import Thread, Event
 from Queue import Queue
 
+NO_AUX = 1
+
+# LED Aux
+BLACK = 2
+RED = 3
+YELLOW = 4
+GREEN = 5
+CYAN = 6
+BLUE = 7
+MAGENTA = 8
+WHITE = 9
+
+# Buzzer Aux
+POWERUP = 10
+POWERDOWN = 11
+STARTRACE = 12
+
+QUEUE_SIZE = 10
+TURN_ANGLE = 30 # degrees turn corresponding to full turn
+
 class ControlThread(Thread):
 	"""Handles communications. Is a continuous timer. Also implements
 	protocol.
@@ -103,24 +123,6 @@ class TestControlThread(unittest.TestCase):
 
 class Zumo:
 	"""Logic for Zumo."""
-	NO_AUX = 1
-
-	# LED Aux
-	BLACK = 2
-	RED = 3
-	YELLOW = 4
-	GREEN = 5
-	CYAN = 6
-	BLUE = 7
-	MAGENTA = 8
-	WHITE = 9
-
-	# Buzzer Aux
-	POWERUP = 10
-	POWERDOWN = 11
-
-	QUEUE_SIZE = 10
-	TURN_ANGLE = 30 # degrees turn corresponding to full turn
 
 	def __init__(self, connection, time):
 		"""Initialise a Zumo. Requires a connection, which can be

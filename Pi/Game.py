@@ -145,6 +145,7 @@ class Game:
 	def startRace():
 		for z in Game.zumo:
 			z.go();
+			z.playsound(Zumo.POWERUP)
 
 	@staticmethod
 	def stopRace():

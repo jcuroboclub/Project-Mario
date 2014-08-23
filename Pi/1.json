@@ -1,6 +1,7 @@
 {
 	"meta": "Mac conf file",
 	"zumoser": [
+		"/dev/tty.HC-05-DevB",
 		"/dev/tty.PillyDude-DevB",
 		"/dev/tty.BRENDANZUMOBOT-DevB"
 	],
