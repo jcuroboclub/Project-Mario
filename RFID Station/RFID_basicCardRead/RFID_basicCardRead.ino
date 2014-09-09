@@ -34,7 +34,7 @@ void setup()
 
   // Init RFID module
   mfrc522.PCD_Init();
-//  mfrc522_num2.PCD_Init();
+  //  mfrc522_num2.PCD_Init();
 
 }
 
@@ -77,12 +77,13 @@ boolean newUID()
 void displayUIDSerial(int reader)
 {
   //Serial.println(reader);
-  
+  int len = mfrc522.uid.size;
+
   // all cards received with module have 4 Byte UIDs that have been tested
-  for(int i = 0; i <= mfrc522.uid.size; i++)
+  for(int i = 0; i <= len; i++)
   {
     // newline at end of UID
-    if(i == mfrc522.uid.size)
+    if(i == len)
     {
       Serial.println();
     }
@@ -93,13 +94,17 @@ void displayUIDSerial(int reader)
       {
         Serial.print("0");
       }
-      Serial.print(mfrc522.uid.uidByte[i]);
-      Serial.print(",");
+      Serial.print(mfrc522.uid.uidByte[i],HEX);
+      if(i != len - 1)
+      {
+        Serial.print(",");
+      }
     }
   }
-  
+
   mfrc522.PICC_HaltA();
 }
+
 
 
 
